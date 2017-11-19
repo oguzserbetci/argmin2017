@@ -5,7 +5,7 @@ Argumentation Mining Project, Uni Potsdam, WS17/18
 We use microtext corpus [1] from [`peldszus/arg-microtexts`](https://github.com/peldszus/arg-microtexts).
 
 ## Architecture
-We use a Pointer Architecture as described in [2].
+We use an architecture as described in [2].
 
 # References
 [1] Andreas Peldszus, Manfred Stede. [An annotated corpus of argumentative microtexts. First European Conference on Argumentation: Argumentation and Reasoned Action](http://www.ling.uni-potsdam.de/%7Epeldszus/eca2015-preprint.pdf), Portugal, Lisbon, June 2015.
