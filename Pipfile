@@ -1,0 +1,23 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+
+
+[packages]
+keras = '<2'
+tensorflow = ''
+numpy = ''
+spacy = '>2'
+sklearn = ''
+h5py = ''
+
+
+[requires]
+
+python_version = "3.6.3"
