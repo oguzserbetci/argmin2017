@@ -69,7 +69,7 @@ def read_ac(xml):
         trees.append(parent)
     return trees[0].root
 
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en_vectors_web_lg')
 
 from sklearn.model_selection import ShuffleSplit
 class MTCorpus(object):
@@ -101,4 +101,3 @@ class MTCorpus(object):
             self.tags[token.tag_] += 1
         # Bag of words (with spacy word2vec)
         return np.mean([token.vector for token in tokens], axis=0)
-
