@@ -69,35 +69,78 @@ def read_ac(xml):
         trees.append(parent)
     return trees[0].root
 
-nlp = spacy.load('en_vectors_web_lg')
+nlp = spacy.load('en_core_web_lg')
 
 from sklearn.model_selection import ShuffleSplit
+from collections import Counter
 class MTCorpus(object):
     def __init__(self):
         files = sorted(glob('./arg-microtexts/corpus/en/*.xml'))
         self.links = []
         self.documents = []
+        self.tokens = []
         self.lemmas = defaultdict(int)
-        self.tags = defaultdict(int)
+        
         for file in files:
             with open(file,'r',encoding='UTF-8') as file:
                 xml = ET.parse(file)
                 ac_tree = read_ac(xml)
                 y = [int(ac_tree.search('a{}'.format(i)).p_value[1:]) for i in range(1, len(ac_tree) + 1)]
                 self.links.append(y)
-                x = [ac_tree.search('e{}'.format(i)).text for i in range(1, len(ac_tree) + 1)]
-                self.documents.append([])
-                for ac in x:
-                    self.documents[-1].append(self.represent(ac))
-                self.documents[-1] = np.array(self.documents[-1])
-
-    '''Tokenizes a string.'''
+                '''Tokenizes a string.'''
+                acs = [ac_tree.search('e{}'.format(i)).text for i in range(1, len(ac_tree) + 1)]
+                document = [self.represent(ac) for ac in acs]
+                self.documents.append(document)
+        
+        self.lemma_indices = dict(zip(self.lemmas.keys(),range(len(self.lemmas))))
+        self.X_large = self._x_large()
+        self.X_small = self._x_small()
+                
     def represent(self, sent):
         # Tokenize sentence
         tokens = nlp(sent)
-        # lemmas
+        # Build lemma vocabulary
         for token in tokens:
             self.lemmas[token.lemma_] += 1
-            self.tags[token.tag_] += 1
-        # Bag of words (with spacy word2vec)
-        return np.mean([token.vector for token in tokens], axis=0)
+        # Return tokens
+        return tokens
+    
+    def _x_small(self):
+        representations = []
+        
+        for document in self.documents:
+            representations.append([])
+            for i, ac in enumerate(document):
+                vectors = []
+                for token in ac:
+                    vectors.append(token.vector)
+                vectors = np.array(vectors)
+                
+                # min and max across token embeddings
+                mean = np.mean(vectors, axis=0)
+                pos = [int(i==0)]
+                r = np.concatenate([pos, mean], axis=0)
+                representations[-1].append(r)
+        return np.array(representations)
+    
+    def _x_large(self):
+        representations = []
+        
+        for document in self.documents:
+            representations.append([])
+            for i, ac in enumerate(document):
+                vectors = []
+                bow = np.zeros(len(self.lemmas))
+                for token in ac:
+                    bow[self.lemma_indices[token.lemma_]] += 1
+                    vectors.append(token.vector)
+                vectors = np.array(vectors)
+                
+                # min and max across token embeddings
+                maximum = np.max(vectors, axis=0)
+                minimum = np.min(vectors, axis=0)                
+                mean = np.mean(vectors, axis=0)
+                pos = [int(i==0)]
+                r = np.concatenate([pos, mean, maximum, minimum, bow], axis=0)
+                representations[-1].append(r)
+        return np.array(representations)
