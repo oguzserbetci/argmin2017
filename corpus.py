@@ -77,25 +77,28 @@ class MTCorpus(object):
     def __init__(self):
         files = sorted(glob('./arg-microtexts/corpus/en/*.xml'))
         self.links = []
+        self.types = []
         self.documents = []
         self.tokens = []
         self.lemmas = defaultdict(int)
-        
+
         for file in files:
             with open(file,'r',encoding='UTF-8') as file:
                 xml = ET.parse(file)
                 ac_tree = read_ac(xml)
                 y = [int(ac_tree.search('a{}'.format(i)).p_value[1:]) for i in range(1, len(ac_tree) + 1)]
+                types = [int(ac_tree.search('a{}'.format(i)).root) for i in range(1, len(ac_tree) + 1)]
                 self.links.append(y)
+                self.types.append(types)
                 '''Tokenizes a string.'''
                 acs = [ac_tree.search('e{}'.format(i)).text for i in range(1, len(ac_tree) + 1)]
                 document = [self.represent(ac) for ac in acs]
                 self.documents.append(document)
-        
+
         self.lemma_indices = dict(zip(self.lemmas.keys(),range(len(self.lemmas))))
         self.X_large = self._x_large()
         self.X_small = self._x_small()
-                
+
     def represent(self, sent):
         # Tokenize sentence
         tokens = nlp(sent)
@@ -104,10 +107,10 @@ class MTCorpus(object):
             self.lemmas[token.lemma_] += 1
         # Return tokens
         return tokens
-    
+
     def _x_small(self):
         representations = []
-        
+
         for document in self.documents:
             representations.append([])
             for i, ac in enumerate(document):
@@ -115,17 +118,17 @@ class MTCorpus(object):
                 for token in ac:
                     vectors.append(token.vector)
                 vectors = np.array(vectors)
-                
+
                 # min and max across token embeddings
                 mean = np.mean(vectors, axis=0)
                 pos = [int(i==0)]
                 r = np.concatenate([pos, mean], axis=0)
                 representations[-1].append(r)
         return np.array(representations)
-    
+
     def _x_large(self):
         representations = []
-        
+
         for document in self.documents:
             representations.append([])
             for i, ac in enumerate(document):
@@ -135,10 +138,10 @@ class MTCorpus(object):
                     bow[self.lemma_indices[token.lemma_]] += 1
                     vectors.append(token.vector)
                 vectors = np.array(vectors)
-                
+
                 # min and max across token embeddings
                 maximum = np.max(vectors, axis=0)
-                minimum = np.min(vectors, axis=0)                
+                minimum = np.min(vectors, axis=0)
                 mean = np.mean(vectors, axis=0)
                 pos = [int(i==0)]
                 r = np.concatenate([pos, mean, maximum, minimum, bow], axis=0)
