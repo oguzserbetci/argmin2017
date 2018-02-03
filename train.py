@@ -16,8 +16,8 @@ import utils
 from sklearn.model_selection import ShuffleSplit, train_test_split
 from sklearn.utils import class_weight
 from tqdm import tqdm
-import argparse
 import pickle
+import argparse
 
 import numpy as np
 np.set_printoptions(precision=3, linewidth=1000, edgeitems=100, suppress=True)
@@ -25,31 +25,31 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 6
-fixed_params = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0)
+fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
-    dict(c_weights=True, joint=True),
+    dict(c_weights=False, joint=True),
 ]
 
 
-def create_model(seq_len, hidden_size, dropout, joint=False):
+def create_model(seq_len, hidden_size, dropout, regularizer='l1', joint=False):
     print('create')
     inp = Input(shape=(seq_len, 2641), name='input')
 
     mask = Masking(mask_value=0)(inp)
-    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer='l2'), name='FC_input')(mask)
+    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(mask)
 
     encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder', recurrent_dropout=dropout, dropout=dropout))(fc)
     decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=dropout, dropout=dropout)(encoder)
 
     if joint:
-        typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer='l2', activation='softmax'), name='type')(encoder)
+        typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer, activation='softmax'), name='type')(encoder)
 
     # glorot_uniform initializer:
     # uniform([-limit,limit]) where limit = sqrt(6/(in+out))
     # for hidden=512: uniform(-0.07, +0.07)
-    E = TimeDistributed(Dense(hidden_size, use_bias=False, kernel_regularizer='l2'), name='E')(encoder)
-    D = TimeDistributed(Dense(hidden_size, use_bias=False, kernel_regularizer='l2'), name='D')(decoder)
+    E = TimeDistributed(Dense(hidden_size, use_bias=False, kernel_regularizer=regularizer), name='E')(encoder)
+    D = TimeDistributed(Dense(hidden_size, use_bias=False, kernel_regularizer=regularizer), name='D')(decoder)
 
     DD = Lambda(lambda x: K.repeat_elements(K.expand_dims(x, 2), seq_len, 2))(D)
 
@@ -58,7 +58,7 @@ def create_model(seq_len, hidden_size, dropout, joint=False):
 
     # glorot_uniform initializer:
     # for hidden=512: uniform(-0,108, +0,108)
-    vt = Dense(1, use_bias=False, kernel_regularizer='l2', name='vT')
+    vt = Dense(1, use_bias=False, kernel_regularizer=regularizer, name='vT')
     softmax = Activation('softmax', name='link')
 
     attention = add([E,DD])
@@ -74,8 +74,8 @@ def create_model(seq_len, hidden_size, dropout, joint=False):
     return model
 
 
-def stringify(params):
-    return '-'.join(['{}_{}'.format(k,v) for k, v in params.items()])
+def stringify(param):
+    return '-'.join(['{}_{}'.format(k,v) for k, v in param.items()])
 
 
 def get_class_weights(Ys):
@@ -94,68 +94,54 @@ def get_class_weights(Ys):
     return sample_weights
 
 
-def crossvalidation(docs, links, epochs, fold=3, types=None):
-    print('cv')
-    earlystopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100)
-
-    metrics = []
-
-    docs_masked = np.array([x for x in docs if len(x) <= MAX_LEN])
-    links_masked = np.array([x for x in links if len(x) <= MAX_LEN])
-    types_masked = np.array([x for x in types if len(x) <= MAX_LEN])
+def preprocess(docs, links, types=None):
+    x_masked = np.array([x for x in docs if len(x) <= MAX_LEN])
+    yl_masked = np.array([x for x in links if len(x) <= MAX_LEN])
+    yt_masked = np.array([x for x in types if len(x) <= MAX_LEN])
 
     # pad with zeros, truncate longer than 6
-    X = pad_sequences(docs_masked, dtype=float, truncating='post',padding='post')
+    X = pad_sequences(x_masked, dtype=float, truncating='post',padding='post')
 
     # convert links 1,1,2 -> [1,0,0]
     #                        [1,0,0]
     #                        [0,1,0]
-    Y = [pad_sequences(to_categorical(np.array(y)-1), truncating='post', padding='post', maxlen=X.shape[1]) for y in links_masked]
-    Y = pad_sequences(Y, dtype=int, truncating='post', padding='post')
+    Yl = [pad_sequences(to_categorical(np.array(y)-1), truncating='post', padding='post', maxlen=X.shape[1]) for y in yl_masked]
+    Yl = pad_sequences(Yl, dtype=int, truncating='post', padding='post')
     if types is not None:
-        Y_t = [pad_sequences(to_categorical(np.array(y)), truncating='post', padding='post') for y in types_masked]
-        Y_t = pad_sequences(Y_t, dtype=int, truncating='post', padding='post')
+        Yt = [pad_sequences(to_categorical(np.array(y)), truncating='post', padding='post') for y in yt_masked]
+        Yt = pad_sequences(Yt, dtype=int, truncating='post', padding='post')
+    else:
+        Yt = None
 
+    return X, Yl, Yt
+
+
+def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
     chooser = np.random.RandomState(20)
-    rest = chooser.choice(np.arange(len(X)), 100)
-    X_train = X[rest]
-    Y_train = Y[rest]
-    Y_t_train = Y_t[rest]
-    kfold = ShuffleSplit(n_splits=fold, test_size=20, random_state=0)
-    splits = kfold.split(X_train)
+    rest = chooser.choice(range(X.shape[0]), 100)
+    rest = np.in1d(range(X.shape[0]), rest)
+    X_training = X[rest]
+    Yl_training = Yl[rest]
+    Yt_training = Yt[rest]
 
+    X_test = X[~rest]
+    Yl_test = Yl[~rest]
+    Yt_test = Yt[~rest]
+
+    kfold = ShuffleSplit(n_splits=args.ifold, test_size=20, random_state=0)
+    splits = kfold.split(X_training)
+
+    metrics = []
     for param in paramsearch:
-        param.update(fixed_params)
         metrics.append([])
-
         for (i, (train, val)) in enumerate(tqdm(splits)):
-            checkpoint = ModelCheckpoint('checkpoints/' + stringify(param) + str(i), monitor='val_loss', save_best_only=True)
+            param.update({'cv_iter':i})
+            X_train, X_val = X_training[train], X_training[val]
+            Yl_train, Yl_val = Yl_training[train], Yl_training[val]
+            Yt_train, Yt_val = Yt_training[train], Yt_training[val]
 
-            loss_weight = [0.5,0.5] if param['joint'] else None
-
-            model = create_model(param['seq_len'], param['hidden_size'], param['dropout'], param['joint'])
-            adam = Adam()
-            metric = utils.JointMetrics() if param['joint'] else utils.Metrics()
-            model.compile(optimizer=adam,
-                          loss='categorical_crossentropy',
-                          metrics=['categorical_accuracy'],
-                          sample_weight_mode='temporal',
-                          loss_weights=loss_weight)
-
-            Ys = [Y_train[train], Y_t_train[train]] if param['joint'] else [Y_train[train]]
-            Ys_val = [Y_train[val], Y_t_train[val]] if param['joint'] else [Y_train[val]]
-            sample_weights = get_class_weights(Ys) if param['c_weights'] else None
-            model.fit(X_train[train], Ys, validation_data=(X_train[val], Ys_val),
-                      callbacks=[
-                          # tensorboard,
-                          metric,
-                          earlystopping,
-                          checkpoint
-                      ],
-                      epochs=epochs, batch_size=param['batch_size'], verbose=2, sample_weight=sample_weights)
-
-            metrics[-1].append(metric.metrics)
-            yield model, metric.metrics
+            metrics, _ = train(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, param)
+            metrics[-1].append(metrics)
 
         # last validation accuracy
         for m in metrics[-1][-1].keys():
@@ -166,17 +152,68 @@ def crossvalidation(docs, links, epochs, fold=3, types=None):
         with open('cross_validation/' + stringify(param), 'wb') as f:
             pickle.dump(metrics, f)
 
+    return metrics
+
+
+def train(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, model=None):
+    param = {}
+    param.update(fixed_param)
+    param.update(params)
+    print(param)
+    adam = Adam()
+    earlystopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=100)
+    checkpoint = ModelCheckpoint('checkpoints/' + stringify(param), monitor='val_loss', save_best_only=True)
+    metric = utils.JointMetrics() if param['joint'] else utils.Metrics()
+
+    loss_weight = [0.5,0.5] if param['joint'] else None
+
+    if model is None:
+        model = create_model(seq_len=param['seq_len'], hidden_size=param['hidden_size'], dropout=param['dropout'], regularizer=param['regularizer'], joint=param['joint'])
+
+        model.compile(optimizer=adam,
+                      loss='categorical_crossentropy',
+                      metrics=['categorical_accuracy'],
+                      sample_weight_mode='temporal',
+                      loss_weights=loss_weight)
+
+    Ys = [Yl_train, Yt_train] if param['joint'] else [Yl_train]
+    Ys_val = [Yl_train, Yt_train] if param['joint'] else [Yl_train]
+    sample_weights = get_class_weights(Ys) if param['c_weights'] else None
+    model.fit(X_train, Ys, validation_data=(X_train, Ys_val),
+              callbacks=[
+                  # tensorboard,
+                  metric,
+                  earlystopping,
+                  checkpoint
+              ],
+              epochs=epochs, batch_size=param['batch_size'], verbose=2, sample_weight=sample_weights)
+
+    return metric.metrics, model
+
+
+def main(docs, links, types=None, epochs=1000, paramsearch=paramsearch):
+    X, Yl, Yt = preprocess(docs, links, types)
+    metrics = crossvalidation(X, Yl, Yt, epochs, paramsearch)
+    return metrics
+
+
+def load_vec(docs, links, types=None):
+    docs, links = np.load(docs), np.load(links)
+    types = np.load(types) if types else None
+    return docs, links, types
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--docs', help='Documents', type=str)
     parser.add_argument('-l', '--links', help='Links', type=str)
     parser.add_argument('-t', '--types', help='Types', type=str, default=None)
+    parser.add_argument('-i', '--ifold', help='Types', type=int, default=3)
     parser.add_argument('-e', '--epochs', help='Epoch', type=int, default=2000)
     args = parser.parse_args()
 
-    docs, links = np.load(args.docs), np.load(args.links)
-    types = np.load(args.types) if args.types else None
+    docs, links, types = load_vec(args.docs, args.links, args.types)
 
-    crossvalidation(docs, links, args.epochs, fold=3, types=types)
-    print('FINISH')
+    print(docs.shape, links.shape, args.epochs)
+    print('cv')
+    main(docs, links, types, args.epochs)
