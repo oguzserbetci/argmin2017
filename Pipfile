@@ -10,7 +10,7 @@ name = "pypi"
 
 
 [packages]
-keras = '<2'
+keras = ''
 tensorflow = ''
 numpy = ''
 spacy = '>2'
