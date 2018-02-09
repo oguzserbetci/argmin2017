@@ -16,6 +16,7 @@ import utils
 from sklearn.model_selection import ShuffleSplit, train_test_split
 from sklearn.utils import class_weight
 from tqdm import tqdm
+from collections import OrderedDict
 import pickle
 import argparse
 
@@ -25,16 +26,16 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 6
-fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
+fixed_param = dict(hidden_size=128, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
-    dict(c_weights=False, joint=True),
+    dict(c_weights=True, joint=True, regularizer='l2'),
+    dict(c_weights=False, joint=True, regularizer='l2'),
 ]
 
 
 def create_model(seq_len, hidden_size, dropout, regularizer='l1', joint=False):
-    print('create')
-    inp = Input(shape=(seq_len, 2641), name='input')
+    inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(mask)
@@ -78,8 +79,9 @@ def stringify(param):
     return '-'.join(['{}_{}'.format(k,v) for k, v in param.items()])
 
 
-def get_class_weights(Ys):
+def get_sample_weights(Ys):
     sample_weights = []
+
     for Y in Ys:
         class_num = Y.shape[-1]
         class_weights = dict(zip(np.arange(class_num),np.zeros(class_num)))
@@ -92,6 +94,16 @@ def get_class_weights(Ys):
             sample_weights[-1][Y.argmax(2) == i] = class_weights[i]
 
     return sample_weights
+
+
+def get_class_weights(Y):
+    class_num = Y.shape[-1]
+    class_weights = dict(zip(np.arange(class_num),np.zeros(class_num)))
+    labels = Y.argmax(2).flatten()
+    un_labels = np.unique(labels)
+    weights = class_weight.compute_class_weight('balanced', un_labels, labels)
+    class_weights.update(zip(un_labels, weights))
+    return class_weights
 
 
 def preprocess(docs, links, types=None):
@@ -117,45 +129,64 @@ def preprocess(docs, links, types=None):
 
 
 def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
-    chooser = np.random.RandomState(20)
-    rest = chooser.choice(range(X.shape[0]), 100)
-    rest = np.in1d(range(X.shape[0]), rest)
-    X_training = X[rest]
-    Yl_training = Yl[rest]
-    Yt_training = Yt[rest]
-
-    X_test = X[~rest]
-    Yl_test = Yl[~rest]
-    Yt_test = Yt[~rest]
-
-    kfold = ShuffleSplit(n_splits=args.ifold, test_size=20, random_state=0)
-    splits = kfold.split(X_training)
-
+    NUM_TRIALS = 2
     metrics = []
-    for param in paramsearch:
-        metrics.append([])
-        for (i, (train, val)) in enumerate(tqdm(splits)):
-            param.update({'cv_iter':i})
-            X_train, X_val = X_training[train], X_training[val]
-            Yl_train, Yl_val = Yl_training[train], Yl_training[val]
-            Yt_train, Yt_val = Yt_training[train], Yt_training[val]
+    test_metrics = {}
+    metric_keys = []
 
-            metrics, _ = train(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, param)
-            metrics[-1].append(metrics)
+    for i in range(NUM_TRIALS):
+        inner = ShuffleSplit(n_splits=1, random_state=0)
+        outer = ShuffleSplit(n_splits=1, random_state=0)
+
+        metrics.append([])
+        models = []
+
+        for (o, (training, test)) in enumerate(tqdm(outer.split(X))):
+            X_training, X_test = X[training], X[test]
+            Yl_training, Yl_test = Yl[training], Yl[test]
+            Yt_training, Yt_test = Yt[training], Yt[test]
+            metrics[-1].append([])
+            models.append([])
+
+            for (k, (train, val)) in enumerate(tqdm(inner.split(training))):
+                metrics[-1][-1].append([])
+                for param in paramsearch:
+
+                    param.update({'cv_iter': i})
+
+                    X_train, X_val = X_training[train], X_training[val]
+                    Yl_train, Yl_val = Yl_training[train], Yl_training[val]
+                    Yt_train, Yt_val = Yt_training[train], Yt_training[val]
+
+                    metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param)
+                    models[-1].append(model)
+                    metric_keys = list(OrderedDict(sorted(metric.items())).keys())
+                    metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
+
+            print(np.shape(metrics))
+            best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(metric_keys).index('link_macro_f1'),:],1))
+            metric, model = train_model(X_training, X_test, Yl_training, Yl_test, Yt_training, Yt_test, epochs, paramsearch[best_param_ind])
+            test_metrics[tuple(paramsearch[best_param_ind].items())] = metric
+
+            print('CV iteration {} has testing score: {}\nfor params: {}'.format(i, {k:v[-1] for k, v in metric.items()}, paramsearch[best_param_ind]))
 
         # last validation accuracy
-        for m in metrics[-1][-1].keys():
-            val_acc = [h[m][-1] for h in metrics[-1]]
-            mean, var = np.mean(val_acc, axis=0), np.var(val_acc, axis=0)
-            print("{}:{} (+/- {})".format(m, mean, var))
+        # for i, metric in enumerate(metric_keys):
+            # val_acc = [h[m][-1] for h in metrics[-1]]
+            # mean, var = np.mean(val_acc, axis=0), np.var(val_acc, axis=0)
+            # print("{}:{} (+/- {})".format(metric, mean, var))
 
-        with open('cross_validation/' + stringify(param), 'wb') as f:
+        with open('cross_validation/' + stringify(param) + '.pl', 'wb') as f:
             pickle.dump(metrics, f)
 
-    return metrics
+        with open('cross_validation/' + stringify(param) + '-test.pl', 'wb') as f:
+            pickle.dump(metrics, f)
+
+    print(metric_keys)
+    return metrics, metric_keys
 
 
-def train(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, model=None):
+def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, model=None):
     param = {}
     param.update(fixed_param)
     param.update(params)
@@ -178,14 +209,15 @@ def train(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, mo
 
     Ys = [Yl_train, Yt_train] if param['joint'] else [Yl_train]
     Ys_val = [Yl_train, Yt_train] if param['joint'] else [Yl_train]
-    sample_weights = get_class_weights(Ys) if param['c_weights'] else None
+    sample_weights = None
+    if param['c_weights']:
+        sample_weights = get_sample_weights(Ys)
+
     model.fit(X_train, Ys, validation_data=(X_train, Ys_val),
-              callbacks=[
-                  # tensorboard,
-                  metric,
-                  earlystopping,
-                  checkpoint
-              ],
+              callbacks=[metric,
+                         # tensorboard,
+                         earlystopping,
+                         checkpoint],
               epochs=epochs, batch_size=param['batch_size'], verbose=2, sample_weight=sample_weights)
 
     return metric.metrics, model
@@ -215,5 +247,4 @@ if __name__ == '__main__':
     docs, links, types = load_vec(args.docs, args.links, args.types)
 
     print(docs.shape, links.shape, args.epochs)
-    print('cv')
     main(docs, links, types, args.epochs)
