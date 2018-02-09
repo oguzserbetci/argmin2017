@@ -105,7 +105,7 @@ def preprocess(docs, links, types=None):
     # convert links 1,1,2 -> [1,0,0]
     #                        [1,0,0]
     #                        [0,1,0]
-    Yl = [pad_sequences(to_categorical(np.array(y)-1), truncating='post', padding='post', maxlen=X.shape[1]) for y in yl_masked]
+    Yl = [pad_sequences(to_categorical(np.array(y)), truncating='post', padding='post', maxlen=X.shape[1]) for y in yl_masked]
     Yl = pad_sequences(Yl, dtype=int, truncating='post', padding='post')
     if types is not None:
         Yt = [pad_sequences(to_categorical(np.array(y)), truncating='post', padding='post') for y in yt_masked]
