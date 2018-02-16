@@ -13,7 +13,7 @@ from keras.models import load_model
 
 import utils
 
-from sklearn.model_selection import ShuffleSplit, train_test_split
+from sklearn.model_selection import ShuffleSplit, train_test_split, KFold
 from sklearn.utils import class_weight
 from tqdm import tqdm
 from collections import OrderedDict
@@ -26,11 +26,11 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 6
-fixed_param = dict(hidden_size=128, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
+fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
-    dict(c_weights=True, joint=True, regularizer='l2'),
-    dict(c_weights=False, joint=True, regularizer='l2'),
+    dict(c_weights=True, joint=True, regularizer=None),
+    dict(c_weights=False, joint=True, regularizer=None),
 ]
 
 
@@ -131,14 +131,17 @@ def preprocess(docs, links, types=None):
 def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
     NUM_TRIALS = 2
     metrics = []
-    test_metrics = {}
-    metric_keys = []
+    test_metrics = []
+    metric_keys = ['iteration', 'outer', 'inner', 'param', 'score', 'epoch']
+    paramset = []
+    score_keys = []
 
     for i in range(NUM_TRIALS):
-        inner = ShuffleSplit(n_splits=1, random_state=0)
-        outer = ShuffleSplit(n_splits=1, random_state=0)
+        inner = KFold(n_splits=5, shuffle=True, random_state=0)
+        outer = KFold(n_splits=6, shuffle=True, random_state=0)
 
         metrics.append([])
+        test_metrics.append([])
         models = []
 
         for (o, (training, test)) in enumerate(tqdm(outer.split(X))):
@@ -149,10 +152,16 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
             models.append([])
 
             for (k, (train, val)) in enumerate(tqdm(inner.split(training))):
+                print('data lengths', len(train),len(val),len(test))
                 metrics[-1][-1].append([])
                 for param in paramsearch:
 
-                    param.update({'cv_iter': i})
+                    params = {}
+                    params.update(fixed_param)
+                    params.update(param)
+                    params.update({'cv_iter': i})
+                    if param not in paramset:
+                        paramset.append(param)
 
                     X_train, X_val = X_training[train], X_training[val]
                     Yl_train, Yl_val = Yl_training[train], Yl_training[val]
@@ -160,15 +169,17 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
 
                     metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param)
                     models[-1].append(model)
-                    metric_keys = list(OrderedDict(sorted(metric.items())).keys())
+                    score_keys = list(OrderedDict(sorted(metric.items())).keys())
                     metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
 
-            print(np.shape(metrics))
-            best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(metric_keys).index('link_macro_f1'),:],1))
-            metric, model = train_model(X_training, X_test, Yl_training, Yl_test, Yt_training, Yt_test, epochs, paramsearch[best_param_ind])
-            test_metrics[tuple(paramsearch[best_param_ind].items())] = metric
+            print(np.shape(metrics[-1][-1]))
+            best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(score_keys).index('link_macro_f1'),:],1))
+            print(best_param_ind)
+            test_metric, _ = train_model(X_training, X_test, Yl_training, Yl_test, Yt_training, Yt_test, epochs, paramsearch[best_param_ind])
+            test_metrics[-1].append(test_metric)
 
             print('CV iteration {} has testing score: {}\nfor params: {}'.format(i, {k:v[-1] for k, v in metric.items()}, paramsearch[best_param_ind]))
+            break
 
         # last validation accuracy
         # for i, metric in enumerate(metric_keys):
@@ -176,13 +187,16 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
             # mean, var = np.mean(val_acc, axis=0), np.var(val_acc, axis=0)
             # print("{}:{} (+/- {})".format(metric, mean, var))
 
-        with open('cross_validation/' + stringify(param) + '.pl', 'wb') as f:
-            pickle.dump(metrics, f)
+    with open('cross_validation/' + stringify(param) + '.pl', 'wb') as f:
+        metrics = dict(metrics=metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
+        pickle.dump(metrics, f)
 
-        with open('cross_validation/' + stringify(param) + '-test.pl', 'wb') as f:
-            pickle.dump(metrics, f)
+    with open('cross_validation/' + stringify(param) + '_test.pl', 'wb') as f:
+        test_metrics = dict(metrics=test_metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
+        pickle.dump(test_metrics, f)
 
     print(metric_keys)
+    print(score_keys)
     return metrics, metric_keys
 
 
