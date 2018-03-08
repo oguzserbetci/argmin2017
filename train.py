@@ -187,11 +187,11 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
             # mean, var = np.mean(val_acc, axis=0), np.var(val_acc, axis=0)
             # print("{}:{} (+/- {})".format(metric, mean, var))
 
-    with open('cross_validation/' + stringify(param) + '.pl', 'wb') as f:
+    with open('cross_validation/train.pl', 'wb') as f:
         metrics = dict(metrics=metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
         pickle.dump(metrics, f)
 
-    with open('cross_validation/' + stringify(param) + '_test.pl', 'wb') as f:
+    with open('cross_validation/test.pl', 'wb') as f:
         test_metrics = dict(metrics=test_metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
         pickle.dump(test_metrics, f)
 
