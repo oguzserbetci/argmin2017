@@ -1,19 +1,17 @@
 from keras.models import Model
 from keras import backend as K
-from keras.layers import LSTM, Input, Dense, Activation, Add, Reshape, Lambda, Concatenate, \
-                         TimeDistributed, Bidirectional, Masking
+from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda
+from keras.layers import TimeDistributed, Bidirectional, Masking
 
 from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical, plot_model
+from keras.utils import to_categorical
 
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
-from keras.models import load_model
-
 import utils
 
-from sklearn.model_selection import ShuffleSplit, train_test_split, KFold
+from sklearn.model_selection import KFold
 from sklearn.utils import class_weight
 from tqdm import tqdm
 from collections import OrderedDict
@@ -30,7 +28,6 @@ fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
     dict(c_weights=True, joint=True, regularizer=None),
-    dict(c_weights=False, joint=True, regularizer=None),
 ]
 
 
@@ -144,14 +141,14 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
         test_metrics.append([])
         models = []
 
-        for (o, (training, test)) in enumerate(tqdm(outer.split(X))):
+        for (o, (training, test)) in tqdm(enumerate(outer.split(X))):
             X_training, X_test = X[training], X[test]
             Yl_training, Yl_test = Yl[training], Yl[test]
             Yt_training, Yt_test = Yt[training], Yt[test]
             metrics[-1].append([])
             models.append([])
 
-            for (k, (train, val)) in enumerate(tqdm(inner.split(training))):
+            for (k, (train, val)) in tqdm(enumerate(inner.split(training))):
                 print('data lengths', len(train),len(val),len(test))
                 metrics[-1][-1].append([])
                 for param in paramsearch:
@@ -161,7 +158,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
                     params.update(param)
                     params.update({'cv_iter': i})
                     if param not in paramset:
-                        paramset.append(param)
+                        paramset.append(params)
 
                     X_train, X_val = X_training[train], X_training[val]
                     Yl_train, Yl_val = Yl_training[train], Yl_training[val]
@@ -222,7 +219,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
                       loss_weights=loss_weight)
 
     Ys = [Yl_train, Yt_train] if param['joint'] else [Yl_train]
-    Ys_val = [Yl_train, Yt_train] if param['joint'] else [Yl_train]
+    Ys_val = [Yl_val, Yt_val] if param['joint'] else [Yl_val]
     sample_weights = None
     if param['c_weights']:
         sample_weights = get_sample_weights(Ys)

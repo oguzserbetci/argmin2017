@@ -7,15 +7,18 @@ name = "pypi"
 
 [dev-packages]
 
+spacy = ">2"
 
 
 [packages]
-keras = ''
-tensorflow = ''
-numpy = ''
-spacy = '>2'
-sklearn = ''
-h5py = ''
+
+keras = ""
+tensorflow = ""
+numpy = ""
+sklearn = ""
+"h5py" = ""
+neovim = "*"
+tqdm = "*"
 
 
 [requires]
