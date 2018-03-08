@@ -27,18 +27,23 @@ MAX_LEN = 6
 fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
-    dict(c_weights=True, joint=True, regularizer=None),
+    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0),
+    dict(c_weights=False, joint=True, regularizer=None, recurrent_dropout=0),
+    dict(c_weights=True, joint=True, regularizer='l2', recurrent_dropout=0),
+    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0.9),
 ]
 
 
-def create_model(seq_len, hidden_size, dropout, regularizer='l1', joint=False):
+def create_model(seq_len, hidden_size, dropout, recurrent_dropout, regularizer='l1', joint=False):
     inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
-    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(mask)
+    dropped = Dropout(dropout)(mask)
+    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
 
-    encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder', recurrent_dropout=dropout, dropout=dropout))(fc)
-    decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=dropout, dropout=dropout)(encoder)
+
+    encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder', recurrent_dropout=recurrent_dropout, dropout=dropout))(fc)
+    decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=recurrent_dropout, dropout=dropout)(encoder)
 
     if joint:
         typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer, activation='softmax'), name='type')(encoder)
@@ -200,20 +205,20 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
     return metrics, metric_keys
 
 
-def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, model=None):
-    param = {}
-    param.update(fixed_param)
-    param.update(params)
-    print(param)
+def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param, model=None):
+    params = {}
+    params.update(fixed_param)
+    params.update(param)
+    print(params)
     adam = Adam()
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
-    checkpoint = ModelCheckpoint('checkpoints/' + stringify(param), monitor='val_loss', save_best_only=True)
-    metric = utils.JointMetrics() if param['joint'] else utils.Metrics()
+    checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
+    metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
 
-    loss_weight = [0.5,0.5] if param['joint'] else None
+    loss_weight = [0.5,0.5] if params['joint'] else None
 
     if model is None:
-        model = create_model(seq_len=param['seq_len'], hidden_size=param['hidden_size'], dropout=param['dropout'], regularizer=param['regularizer'], joint=param['joint'])
+        model = create_model(seq_len=params['seq_len'], hidden_size=params['hidden_size'], dropout=params['dropout'], recurrent_dropout=params['recurrent_dropout'], regularizer=params['regularizer'], joint=params['joint'])
 
         model.compile(optimizer=adam,
                       loss='categorical_crossentropy',
@@ -221,10 +226,10 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
                       sample_weight_mode='temporal',
                       loss_weights=loss_weight)
 
-    Ys = [Yl_train, Yt_train] if param['joint'] else [Yl_train]
-    Ys_val = [Yl_val, Yt_val] if param['joint'] else [Yl_val]
+    Ys = [Yl_train, Yt_train] if params['joint'] else [Yl_train]
+    Ys_val = [Yl_val, Yt_val] if params['joint'] else [Yl_val]
     sample_weights = None
-    if param['c_weights']:
+    if params['c_weights']:
         sample_weights = get_sample_weights(Ys)
 
     model.fit(X_train, Ys, validation_data=(X_val, Ys_val),
@@ -232,7 +237,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
                          # tensorboard,
                          # earlystopping,
                          checkpoint],
-              epochs=epochs, batch_size=param['batch_size'], verbose=2, sample_weight=sample_weights)
+              epochs=epochs, batch_size=params['batch_size'], verbose=2, sample_weight=sample_weights)
 
     return metric.metrics, model
 
