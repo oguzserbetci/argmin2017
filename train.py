@@ -133,9 +133,12 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
     paramset = []
     score_keys = []
 
+    inner_seed = np.random.RandomState(0)
+    outer_seed = np.random.RandomState(1)
+
     for i in range(NUM_TRIALS):
-        inner = KFold(n_splits=5, shuffle=True, random_state=0)
-        outer = KFold(n_splits=6, shuffle=True, random_state=0)
+        inner = KFold(n_splits=5, shuffle=True, random_state=inner_seed)
+        outer = KFold(n_splits=7, shuffle=True, random_state=outer_seed)
 
         metrics.append([])
         test_metrics.append([])
