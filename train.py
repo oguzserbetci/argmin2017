@@ -1,7 +1,7 @@
 from keras.models import Model
 from keras import backend as K
 from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda
-from keras.layers import TimeDistributed, Bidirectional, Masking
+from keras.layers import TimeDistributed, Bidirectional, Masking, Dropout
 
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
