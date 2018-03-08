@@ -167,7 +167,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
                     Yl_train, Yl_val = Yl_training[train], Yl_training[val]
                     Yt_train, Yt_val = Yt_training[train], Yt_training[val]
 
-                    metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param)
+                    metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params)
                     models[-1].append(model)
                     score_keys = list(OrderedDict(sorted(metric.items())).keys())
                     metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
