@@ -227,7 +227,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     if param['c_weights']:
         sample_weights = get_sample_weights(Ys)
 
-    model.fit(X_train, Ys, validation_data=(X_train, Ys_val),
+    model.fit(X_train, Ys, validation_data=(X_val, Ys_val),
               callbacks=[metric,
                          # tensorboard,
                          # earlystopping,
