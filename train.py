@@ -41,7 +41,6 @@ def create_model(seq_len, hidden_size, dropout, recurrent_dropout, regularizer='
     dropped = Dropout(dropout)(mask)
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
 
-
     encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder', recurrent_dropout=recurrent_dropout, dropout=dropout))(fc)
     decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=recurrent_dropout, dropout=dropout)(encoder)
 
@@ -161,7 +160,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
             metrics[-1].append([])
             models.append([])
 
-            for (k, (train, val)) in tqdm(enumerate(inner.split(training))):
+            for (k, (train, val)) in tqdm(enumerate(inner.split(X_training))):
                 print('data lengths', len(train),len(val),len(test))
                 metrics[-1][-1].append([])
                 for param in paramsearch:
