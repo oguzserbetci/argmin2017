@@ -216,7 +216,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     print(params)
     adam = Adam()
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
-    checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
+    # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
     metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
 
     loss_weight = [0.5,0.5] if params['joint'] else None
@@ -240,7 +240,8 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
               callbacks=[metric,
                          # tensorboard,
                          # earlystopping,
-                         checkpoint],
+                         # checkpoint,
+                         ],
               epochs=epochs, batch_size=params['batch_size'], verbose=2, sample_weight=sample_weights)
 
     return metric.metrics, model
