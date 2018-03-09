@@ -4,7 +4,7 @@ from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda
 from keras.layers import TimeDistributed, Bidirectional, Masking, Dropout
 
 from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical
+from keras.utils import to_categorical, multi_gpu_model
 
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -34,7 +34,7 @@ paramsearch = [
 ]
 
 
-def create_model(seq_len, hidden_size, dropout, recurrent_dropout, regularizer='l1', joint=False):
+def create_model(seq_len, hidden_size, dropout, recurrent_dropout, regularizer='l1', joint=False, n_gpu=None):
     inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
@@ -74,7 +74,12 @@ def create_model(seq_len, hidden_size, dropout, recurrent_dropout, regularizer='
         model = Model(inputs=inp, outputs=[attention, typ])
     else:
         model = Model(inputs=inp, outputs=attention)
-    return model
+
+    if n_gpu:
+        parallel_model = multi_gpu_model(model, gpus=n_gpu)
+        return parallel_model
+    else:
+        return model
 
 
 def stringify(param):
@@ -130,7 +135,7 @@ def preprocess(docs, links, types=None):
     return X, Yl, Yt
 
 
-def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
+def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     NUM_TRIALS = 2
     metrics = []
     test_metrics = []
@@ -172,7 +177,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
                     Yl_train, Yl_val = Yl_training[train], Yl_training[val]
                     Yt_train, Yt_val = Yt_training[train], Yt_training[val]
 
-                    metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params)
+                    metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, n_gpu)
                     models[-1].append(model)
                     score_keys = list(OrderedDict(sorted(metric.items())).keys())
                     metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
@@ -205,7 +210,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch=paramsearch):
     return metrics, metric_keys
 
 
-def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param, model=None):
+def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param, n_gpu, model=None):
     params = {}
     params.update(fixed_param)
     params.update(param)
@@ -218,7 +223,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     loss_weight = [0.5,0.5] if params['joint'] else None
 
     if model is None:
-        model = create_model(seq_len=params['seq_len'], hidden_size=params['hidden_size'], dropout=params['dropout'], recurrent_dropout=params['recurrent_dropout'], regularizer=params['regularizer'], joint=params['joint'])
+        model = create_model(seq_len=params['seq_len'], hidden_size=params['hidden_size'], dropout=params['dropout'], recurrent_dropout=params['recurrent_dropout'], regularizer=params['regularizer'], joint=params['joint'], n_gpu=n_gpu)
 
         model.compile(optimizer=adam,
                       loss='categorical_crossentropy',
@@ -242,9 +247,9 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     return metric.metrics, model
 
 
-def main(docs, links, types=None, epochs=1000, paramsearch=paramsearch):
+def main(docs, links, types=None, epochs=1000, paramsearch=paramsearch, n_gpu=None):
     X, Yl, Yt = preprocess(docs, links, types)
-    metrics = crossvalidation(X, Yl, Yt, epochs, paramsearch)
+    metrics = crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu)
     return metrics
 
 
@@ -261,9 +266,10 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--types', help='Types', type=str, default=None)
     parser.add_argument('-i', '--ifold', help='Types', type=int, default=3)
     parser.add_argument('-e', '--epochs', help='Epoch', type=int, default=2000)
+    parser.add_argument('-g', '--n_gpu', help='Multi GPU', type=int, default=None)
     args = parser.parse_args()
 
     docs, links, types = load_vec(args.docs, args.links, args.types)
 
     print(docs.shape, links.shape, args.epochs)
-    main(docs, links, types, args.epochs)
+    main(docs, links, types, args.epochs, paramsearch, args.n_gpu)
