@@ -220,17 +220,18 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     params.update(param)
     print(params)
     adam = Adam()
+    metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
+    callbacks = [metric]
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
-    if params['tboard']:
+    if params.get('tboard'):
         tboard_desc = params['tboard']
         tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
         tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run,
                                   histogram_freq=100, batch_size=32, write_grads=True)
+        callbacks.append(tensorboard)
 
-    metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
-
-    loss_weight = [0.5,0.5] if params['joint'] else None
+    loss_weight = [0.5, 0.5] if params['joint'] else None
 
     if model is None:
         model = create_model(seq_len=params['seq_len'], hidden_size=params['hidden_size'], dropout=params['dropout'], recurrent_dropout=params['recurrent_dropout'], regularizer=params['regularizer'], joint=params['joint'], n_gpu=n_gpu)
@@ -250,11 +251,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     model.fit(X_train,
               Ys,
               validation_data=(X_val, Ys_val),
-              callbacks=[metric,
-                         tensorboard,
-                         # earlystopping,
-                         # checkpoint,
-                         ],
+              callbacks=callbacks,
               epochs=epochs,
               batch_size=params['batch_size'],
               verbose=0,
