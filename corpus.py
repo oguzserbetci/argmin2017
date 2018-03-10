@@ -3,7 +3,6 @@ import numpy as np
 import spacy
 from collections import defaultdict
 import xml.etree.ElementTree as ET
-from functools import reduce
 
 
 class ArgumentTree(object):
@@ -74,10 +73,10 @@ def read_ac(xml):
         trees.append(parent)
     return trees[0].root
 
+
 nlp = spacy.load('en_core_web_lg')
 
-from sklearn.model_selection import ShuffleSplit
-from collections import Counter
+
 class MTCorpus(object):
     def __init__(self):
         files = sorted(glob('./arg-microtexts/corpus/en/*.xml'))
