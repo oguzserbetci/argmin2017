@@ -169,6 +169,9 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
                     params.update(fixed_param)
                     params.update(param)
                     params.update({'cv_iter': i})
+                    params.update({'tboard': {0:i,
+                                              1:k,
+                                              2:stringify(params)}})
                     if param not in paramset:
                         paramset.append(params)
 
@@ -184,9 +187,12 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
             print(np.shape(metrics[-1][-1]))
             best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(score_keys).index('link_macro_f1'),:],1))
             print(best_param_ind)
+            best_params = paramsearch[best_param_ind]
+            best_params.update({'tboard': {0:i,
+                                           1:'test_'+stringify(params)}})
             test_metric, _ = train_model(X_training, X_test, Yl_training,
                                          Yl_test, Yt_training, Yt_test, epochs,
-                                         paramsearch[best_param_ind], n_gpu)
+                                         best_params, n_gpu)
             test_metrics[-1].append(test_metric)
 
             print('CV iteration {} has testing score: {}\nfor params: {}'.format(i, {k:v[-1] for k, v in metric.items()}, paramsearch[best_param_ind]))
@@ -219,9 +225,12 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     adam = Adam()
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
-    tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/', histogram_freq=0, batch_size=32,
-                              write_graph=False, write_grads=False, write_images=False,
-                              embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+    if params['tboard']:
+        tboard_desc = params['tboard']
+        tboard_run = '/'.join([v for k, v in sorted(tboard_desc.items(), key=lambda x: x[0])])
+        tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run, histogram_freq=0, batch_size=32,
+                                  write_graph=False, write_grads=False, write_images=False,
+                                  embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
 
     metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
 
