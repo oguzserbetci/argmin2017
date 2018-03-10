@@ -82,7 +82,7 @@ def create_model(seq_len, hidden_size, dropout, recurrent_dropout, regularizer='
 
 
 def stringify(param):
-    return '-'.join(['{}_{}'.format(k,v) for k, v in param.items()])
+    return '-'.join(['{}_{}'.format(k,v) for k, v in param.items() if k != 'tboard'])
 
 
 def get_sample_weights(Ys):
