@@ -184,7 +184,9 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
             print(np.shape(metrics[-1][-1]))
             best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(score_keys).index('link_macro_f1'),:],1))
             print(best_param_ind)
-            test_metric, _ = train_model(X_training, X_test, Yl_training, Yl_test, Yt_training, Yt_test, epochs, paramsearch[best_param_ind])
+            test_metric, _ = train_model(X_training, X_test, Yl_training,
+                                         Yl_test, Yt_training, Yt_test, epochs,
+                                         paramsearch[best_param_ind], n_gpu)
             test_metrics[-1].append(test_metric)
 
             print('CV iteration {} has testing score: {}\nfor params: {}'.format(i, {k:v[-1] for k, v in metric.items()}, paramsearch[best_param_ind]))
@@ -236,13 +238,18 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     if params['c_weights']:
         sample_weights = get_sample_weights(Ys)
 
-    model.fit(X_train, Ys, validation_data=(X_val, Ys_val),
+    model.fit(X_train,
+              Ys,
+              validation_data=(X_val, Ys_val),
               callbacks=[metric,
                          # tensorboard,
                          # earlystopping,
                          # checkpoint,
                          ],
-              epochs=epochs, batch_size=params['batch_size'], verbose=2, sample_weight=sample_weights)
+              epochs=epochs,
+              batch_size=params['batch_size'],
+              verbose=0,
+              sample_weight=sample_weights)
 
     return metric.metrics, model
 
