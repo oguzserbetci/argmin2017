@@ -39,6 +39,11 @@ class ArgumentTree(object):
         else:
             return self.parent.root
 
+    @property
+    def is_root(self):
+        '''root if it does not have a parent.'''
+        return not self.parent
+
     def search(self, value):
         if self.value == value:
             return self
@@ -87,8 +92,8 @@ class MTCorpus(object):
                 xml = ET.parse(file)
                 ac_tree = read_ac(xml)
                 y = [int(ac_tree.search('a{}'.format(i)).p_value[1:]) for i in range(1, len(ac_tree) + 1)]
-                types = [int(ac_tree.search('a{}'.format(i)).root) for i in range(1, len(ac_tree) + 1)]
                 self.links.append(y)
+                types = [int(ac_tree.search('a{}'.format(i)).is_root) for i in range(1, len(ac_tree) + 1)]
                 self.types.append(types)
                 '''Tokenizes a string.'''
                 acs = [ac_tree.search('e{}'.format(i)).text for i in range(1, len(ac_tree) + 1)]
