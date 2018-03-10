@@ -90,11 +90,7 @@ def get_sample_weights(Ys):
 
     for Y in Ys:
         class_num = Y.shape[-1]
-        class_weights = dict(zip(np.arange(class_num),np.zeros(class_num)))
-        labels = Y.argmax(2).flatten()
-        un_labels = np.unique(labels)
-        weights = class_weight.compute_class_weight('balanced', un_labels, labels)
-        class_weights.update(zip(un_labels, weights))
+        class_weights = get_class_weights(Y)
         sample_weights.append(np.zeros(Y.shape[:2]))
         for i in range(class_num):
             sample_weights[-1][Y.argmax(2) == i] = class_weights[i]
