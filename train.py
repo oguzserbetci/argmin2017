@@ -227,7 +227,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
     if params['tboard']:
         tboard_desc = params['tboard']
-        tboard_run = '/'.join([v for k, v in sorted(tboard_desc.items(), key=lambda x: x[0])])
+        tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
         tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run, histogram_freq=0, batch_size=32,
                                   write_graph=False, write_grads=False, write_images=False,
                                   embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
