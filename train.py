@@ -94,6 +94,7 @@ def get_sample_weights(Ys):
         sample_weights.append(np.zeros(Y.shape[:2]))
         for i in range(class_num):
             sample_weights[-1][Y.argmax(2) == i] = class_weights[i]
+        sample_weights[-1][Y.sum(2) == 0] = 0
 
     return sample_weights
 
