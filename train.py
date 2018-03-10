@@ -143,60 +143,57 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     score_keys = []
 
     inner_seed = np.random.RandomState(0)
-    outer_seed = np.random.RandomState(1)
 
     for i in range(NUM_TRIALS):
         inner = KFold(n_splits=5, shuffle=True, random_state=inner_seed)
-        outer = KFold(n_splits=7, shuffle=True, random_state=outer_seed)
 
         metrics.append([])
         test_metrics.append([])
         models = []
 
-        for (o, (training, test)) in tqdm(enumerate(outer.split(X))):
-            X_training, X_test = X[training], X[test]
-            Yl_training, Yl_test = Yl[training], Yl[test]
-            Yt_training, Yt_test = Yt[training], Yt[test]
-            metrics[-1].append([])
-            models.append([])
+        # for (o, (training, test)) in tqdm(enumerate(outer.split(X))):
+        X_training = X[:100]
+        Yl_training = Yl[:100]
+        Yt_training = Yt[:100]
+        metrics[-1].append([])
+        models.append([])
 
-            for (k, (train, val)) in tqdm(enumerate(inner.split(X_training))):
-                print('data lengths', len(train),len(val),len(test))
-                metrics[-1][-1].append([])
-                for param in paramsearch:
+        for (k, (train, val)) in tqdm(enumerate(inner.split(X_training))):
+            print('data lengths', len(train),len(val),len(X[100:]))
+            metrics[-1][-1].append([])
+            for param in paramsearch:
 
-                    params = {}
-                    params.update(fixed_param)
-                    params.update(param)
-                    params.update({'cv_iter': i})
-                    params.update({'tboard': {0:i,
-                                              1:k,
-                                              2:stringify(params)}})
-                    if param not in paramset:
-                        paramset.append(params)
+                params = {}
+                params.update(fixed_param)
+                params.update(param)
+                params.update({'cv_iter': i})
+                params.update({'tboard': {0:i,
+                                          1:k,
+                                          2:stringify(params)}})
+                if param not in paramset:
+                    paramset.append(params)
 
-                    X_train, X_val = X_training[train], X_training[val]
-                    Yl_train, Yl_val = Yl_training[train], Yl_training[val]
-                    Yt_train, Yt_val = Yt_training[train], Yt_training[val]
+                X_train, X_val = X_training[train], X_training[val]
+                Yl_train, Yl_val = Yl_training[train], Yl_training[val]
+                Yt_train, Yt_val = Yt_training[train], Yt_training[val]
 
-                    metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, n_gpu)
-                    models[-1].append(model)
-                    score_keys = list(OrderedDict(sorted(metric.items())).keys())
-                    metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
+                metric, model = train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, params, n_gpu)
+                models[-1].append(model)
+                score_keys = list(OrderedDict(sorted(metric.items())).keys())
+                metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
 
-            print(np.shape(metrics[-1][-1]))
-            best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(score_keys).index('link_macro_f1'),:],1))
-            print(best_param_ind)
-            best_params = paramsearch[best_param_ind]
-            best_params.update({'tboard': {0:i,
-                                           1:'test_'+stringify(params)}})
-            test_metric, _ = train_model(X_training, X_test, Yl_training,
-                                         Yl_test, Yt_training, Yt_test, epochs,
-                                         best_params, n_gpu)
-            test_metrics[-1].append(test_metric)
+            # print(np.shape(metrics[-1][-1]))
+            # best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(score_keys).index('link_macro_f1'),:],1))
+            # print(best_param_ind)
+            # best_params = paramsearch[best_param_ind]
+            # best_params.update({'tboard': {0:i,
+                                           # 1:'test_'+stringify(params)}})
+            # test_metric, _ = train_model(X_training, X_test, Yl_training,
+                                         # Yl_test, Yt_training, Yt_test, epochs,
+                                         # best_params, n_gpu)
+            # test_metrics[-1].append(test_metric)
 
-            print('CV iteration {} has testing score: {}\nfor params: {}'.format(i, {k:v[-1] for k, v in metric.items()}, paramsearch[best_param_ind]))
-            break
+            # print('CV iteration {} has testing score: {}\nfor params: {}'.format(i, {k:v[-1] for k, v in metric.items()}, paramsearch[best_param_ind]))
 
         # last validation accuracy
         # for i, metric in enumerate(metric_keys):
