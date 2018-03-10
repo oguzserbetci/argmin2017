@@ -7,7 +7,7 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical, multi_gpu_model
 
 from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 
 import utils
 
@@ -211,6 +211,11 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     return metrics, metric_keys
 
 
+tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0, batch_size=32,
+                          write_graph=False, write_grads=False, write_images=False,
+                          embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+
+
 def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param, n_gpu, model=None):
     params = {}
     params.update(fixed_param)
@@ -242,7 +247,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
               Ys,
               validation_data=(X_val, Ys_val),
               callbacks=[metric,
-                         # tensorboard,
+                         tensorboard,
                          # earlystopping,
                          # checkpoint,
                          ],
