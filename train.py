@@ -211,11 +211,6 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     return metrics, metric_keys
 
 
-tensorboard = TensorBoard(log_dir='./logs', histogram_freq=0, batch_size=32,
-                          write_graph=False, write_grads=False, write_images=False,
-                          embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
-
-
 def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param, n_gpu, model=None):
     params = {}
     params.update(fixed_param)
@@ -224,6 +219,10 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     adam = Adam()
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
+    tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/', histogram_freq=0, batch_size=32,
+                              write_graph=False, write_grads=False, write_images=False,
+                              embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+
     metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
 
     loss_weight = [0.5,0.5] if params['joint'] else None
