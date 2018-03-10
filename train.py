@@ -228,9 +228,8 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     if params['tboard']:
         tboard_desc = params['tboard']
         tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
-        tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run, histogram_freq=0, batch_size=32,
-                                  write_graph=False, write_grads=False, write_images=False,
-                                  embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+        tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run,
+                                  histogram_freq=100, batch_size=32, write_grads=True)
 
     metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
 
