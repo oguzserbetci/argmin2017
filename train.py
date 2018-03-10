@@ -113,25 +113,27 @@ def get_class_weights(Y):
 
 
 def preprocess(docs, links, types=None):
-    x_masked = np.array([x for x in docs if len(x) <= MAX_LEN])
-    yl_masked = np.array([x for x in links if len(x) <= MAX_LEN])
-    yt_masked = np.array([x for x in types if len(x) <= MAX_LEN])
+    docs_filtered = np.array([x for x in docs if len(x) <= MAX_LEN])
+    links_filtered = np.array([x for x in links if len(x) <= MAX_LEN])
+    types_filtered = np.array([x for x in types if len(x) <= MAX_LEN])
 
     # pad with zeros, truncate longer than 6
-    X = pad_sequences(x_masked, dtype=float, truncating='post',padding='post')
+    X = pad_sequences(docs_filtered, dtype=float, truncating='post',padding='post')
 
     # convert links 1,1,2 -> [1,0,0]
     #                        [1,0,0]
     #                        [0,1,0]
-    Yl = [pad_sequences(to_categorical(np.array(y)), truncating='post', padding='post', maxlen=X.shape[1]) for y in yl_masked]
+    Yl = [to_categorical([np.array(ys)-1 for ys in y],
+                         num_classes=X.shape[1]) for y in links_filtered]
     Yl = pad_sequences(Yl, dtype=int, truncating='post', padding='post')
     if types is not None:
-        Yt = [pad_sequences(to_categorical(np.array(y)), truncating='post', padding='post') for y in yt_masked]
+        Yt = [pad_sequences(to_categorical(np.array(y)), truncating='post',
+                            padding='post') for y in types_filtered]
         Yt = pad_sequences(Yt, dtype=int, truncating='post', padding='post')
     else:
         Yt = None
 
-    return X, Yl, Yt
+    return X, Yl, Yt, docs_filtered, links_filtered, types_filtered
 
 
 def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
@@ -261,7 +263,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
 
 
 def main(docs, links, types=None, epochs=1000, paramsearch=paramsearch, n_gpu=None):
-    X, Yl, Yt = preprocess(docs, links, types)
+    X, Yl, Yt, _, _, _ = preprocess(docs, links, types)
     metrics = crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu)
     return metrics
 
