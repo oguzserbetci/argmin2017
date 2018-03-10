@@ -216,7 +216,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     return metrics, metric_keys
 
 
-def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param, n_gpu, model=None):
+def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param,
     params = {}
     params.update(fixed_param)
     params.update(param)
