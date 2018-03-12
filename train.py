@@ -164,11 +164,11 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
             print('data lengths', len(train),len(val),len(X[training]))
             metrics[-1].append([])
             for param in paramsearch:
-
                 param.update({'cv_iter': i})
                 param.update({'tboard': {0:i,
                                          1:k,
                                          2:stringify(param)}})
+
                 if param not in paramset:
                     paramset.append(param)
 
@@ -180,6 +180,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
                                             Yl_train, Yl_val,
                                             Yt_train, Yt_val,
                                             epochs, param, n_gpu)
+
                 score_keys = list(OrderedDict(sorted(metric.items())).keys())
                 metrics[-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
 
