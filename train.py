@@ -32,7 +32,10 @@ paramsearch = [
 ]
 
 
-def create_model(seq_len=10, hidden_size=512, dropout=0.9, recurrent_dropout=0, regularizer='l1', joint=False, n_gpu=None):
+def create_model(seq_len=10, hidden_size=512,
+                 dropout=0.9, recurrent_dropout=0,
+                 regularizer='l1', joint=False, n_gpu=None,
+                 drop_encoder=0,drop_decoder=0):
     inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
@@ -42,10 +45,15 @@ def create_model(seq_len=10, hidden_size=512, dropout=0.9, recurrent_dropout=0, 
     encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder', recurrent_dropout=recurrent_dropout, dropout=dropout))(fc)
     decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=recurrent_dropout, dropout=dropout)(encoder)
 
+    if drop_encoder:
+        encoder = Dropout(drop_encoder)(encoder)
+
+    if drop_decoder:
+        decoder = Dropout(drop_decoder)(decoder)
+
     if joint:
-        dropped = Dropout(dropout)(encoder)
         typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
-                                    activation='softmax'), name='type')(dropped)
+                                    activation='softmax'), name='type')(encoder)
 
     # glorot_uniform initializer:
     # uniform([-limit,limit]) where limit = sqrt(6/(in+out))
