@@ -159,22 +159,18 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
         X_training = X[training]
         Yl_training = Yl[training]
         Yt_training = Yt[training]
-        metrics[-1].append([])
 
         for (k, (train, val)) in tqdm(enumerate(inner.split(X_training)), desc='inner'):
             print('data lengths', len(train),len(val),len(X[training]))
-            metrics[-1][-1].append([])
+            metrics[-1].append([])
             for param in paramsearch:
 
-                params = {}
-                params.update(fixed_param)
-                params.update(param)
-                params.update({'cv_iter': i})
-                params.update({'tboard': {0:i,
-                                          1:k,
-                                          2:stringify(params)}})
+                param.update({'cv_iter': i})
+                param.update({'tboard': {0:i,
+                                         1:k,
+                                         2:stringify(param)}})
                 if param not in paramset:
-                    paramset.append(params)
+                    paramset.append(param)
 
                 X_train, X_val = X_training[train], X_training[val]
                 Yl_train, Yl_val = Yl_training[train], Yl_training[val]
@@ -183,23 +179,23 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
                 metric, model = train_model(X_train, X_val,
                                             Yl_train, Yl_val,
                                             Yt_train, Yt_val,
-                                            epochs, params, n_gpu)
+                                            epochs, param, n_gpu)
                 score_keys = list(OrderedDict(sorted(metric.items())).keys())
-                metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
+                metrics[-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
 
         fn = 'cross_validation/{iter}'.format(iter=i)
         os.makedirs(fn, exist_ok=True)
         with open(fn+'/train.pl', 'wb') as f:
-            metrics = dict(metrics=metrics, metric_keys=metric_keys,
-                           score_keys=score_keys, params=paramset,
-                           training_idx=training, test_idx=test)
-            pickle.dump(metrics, f)
+            training_data = dict(metrics=metrics, metric_keys=metric_keys,
+                                 score_keys=score_keys, params=paramset,
+                                 training_idx=training, test_idx=test)
+            pickle.dump(training_data, f)
 
     with open('cross_validation/train.pl', 'wb') as f:
-        metrics = dict(metrics=metrics, metric_keys=metric_keys,
-                       score_keys=score_keys, params=paramset,
-                       training_idx=training_idx, test_idx=test_idx)
-        pickle.dump(metrics, f)
+        training_data = dict(metrics=metrics, metric_keys=metric_keys,
+                             score_keys=score_keys, params=paramset,
+                             training_idx=training_idx, test_idx=test_idx)
+        pickle.dump(training_data, f)
 
     print(metric_keys)
     print(score_keys)
