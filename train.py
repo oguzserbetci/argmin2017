@@ -10,6 +10,7 @@ from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 
 import utils
+import os
 
 from sklearn.model_selection import KFold
 from sklearn.utils import class_weight
@@ -34,7 +35,7 @@ paramsearch = [
 ]
 
 
-def create_model(seq_len, hidden_size, dropout, recurrent_dropout, regularizer='l1', joint=False, n_gpu=None):
+def create_model(seq_len=10, hidden_size=512, dropout=0.9, recurrent_dropout=0, regularizer='l1', joint=False, n_gpu=None):
     inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
