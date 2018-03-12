@@ -90,12 +90,15 @@ def get_sample_weights(Ys):
     sample_weights = []
 
     for Y in Ys:
-        class_num = Y.shape[-1]
         class_weights = get_class_weights(Y)
-        sample_weights.append(np.zeros(Y.shape[:2]))
+        sample_weight = np.zeros(Y.shape[:2])
+
+        class_num = len(class_weights)
         for i in range(class_num):
-            sample_weights[-1][Y.argmax(2) == i] = class_weights[i]
-        sample_weights[-1][Y.sum(2) == 0] = 0
+            sample_weight[Y.argmax(2) == i] = class_weights[i]
+
+        sample_weight[Y.sum(2) == 0] = 0
+        sample_weights.append(sample_weight)
 
     return sample_weights
 
@@ -104,9 +107,9 @@ def get_class_weights(Y):
     class_num = Y.shape[-1]
     class_weights = dict(zip(np.arange(class_num),np.zeros(class_num)))
     labels = Y.argmax(2).flatten()
-    un_labels = np.unique(labels)
-    weights = class_weight.compute_class_weight('balanced', un_labels, labels)
-    class_weights.update(zip(un_labels, weights))
+    unique_labels = np.unique(labels)
+    weights = class_weight.compute_class_weight('balanced', unique_labels, labels)
+    class_weights.update(zip(unique_labels, weights))
     return class_weights
 
 
@@ -137,7 +140,6 @@ def preprocess(docs, links, types=None):
 def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     NUM_TRIALS = 2
     metrics = []
-    test_metrics = []
     metric_keys = ['iteration', 'outer', 'inner', 'param', 'score', 'epoch']
     paramset = []
     score_keys = []
@@ -151,7 +153,6 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
         test_metrics.append([])
         models = []
 
-        # for (o, (training, test)) in tqdm(enumerate(outer.split(X))):
         X_training = X[:100]
         Yl_training = Yl[:100]
         Yt_training = Yt[:100]
@@ -187,31 +188,9 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
         with open(fn, 'wb') as f:
             metrics = dict(metrics=metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
             pickle.dump(metrics, f)
-            # print(np.shape(metrics[-1][-1]))
-            # best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(score_keys).index('link_macro_f1'),:],1))
-            # print(best_param_ind)
-            # best_params = paramsearch[best_param_ind]
-            # best_params.update({'tboard': {0:i,
-                                           # 1:'test_'+stringify(params)}})
-            # test_metric, _ = train_model(X_training, X_test, Yl_training,
-                                         # Yl_test, Yt_training, Yt_test, epochs,
-                                         # best_params, n_gpu)
-            # test_metrics[-1].append(test_metric)
-
-            # print('CV iteration {} has testing score: {}\nfor params: {}'.format(i, {k:v[-1] for k, v in metric.items()}, paramsearch[best_param_ind]))
-
-        # last validation accuracy
-        # for i, metric in enumerate(metric_keys):
-            # val_acc = [h[m][-1] for h in metrics[-1]]
-            # mean, var = np.mean(val_acc, axis=0), np.var(val_acc, axis=0)
-            # print("{}:{} (+/- {})".format(metric, mean, var))
     with open('cross_validation/train.pl', 'wb') as f:
         metrics = dict(metrics=metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
         pickle.dump(metrics, f)
-
-    # with open('cross_validation/test.pl', 'wb') as f:
-        # test_metrics = dict(metrics=test_metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
-        # pickle.dump(test_metrics, f)
 
     print(metric_keys)
     print(score_keys)
