@@ -208,9 +208,9 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
         metrics = dict(metrics=metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
         pickle.dump(metrics, f)
 
-    with open('cross_validation/test.pl', 'wb') as f:
-        test_metrics = dict(metrics=test_metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
-        pickle.dump(test_metrics, f)
+    # with open('cross_validation/test.pl', 'wb') as f:
+        # test_metrics = dict(metrics=test_metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
+        # pickle.dump(test_metrics, f)
 
     print(metric_keys)
     print(score_keys)
