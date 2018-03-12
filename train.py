@@ -155,13 +155,11 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
         inner = KFold(n_splits=5, shuffle=True, random_state=inner_seed)
 
         metrics.append([])
-        models = []
 
         X_training = X[training]
         Yl_training = Yl[training]
         Yt_training = Yt[training]
         metrics[-1].append([])
-        models.append([])
 
         for (k, (train, val)) in tqdm(enumerate(inner.split(X_training)), desc='inner'):
             print('data lengths', len(train),len(val),len(X[training]))
@@ -186,7 +184,6 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
                                             Yl_train, Yl_val,
                                             Yt_train, Yt_val,
                                             epochs, params, n_gpu)
-                models[-1].append(model)
                 score_keys = list(OrderedDict(sorted(metric.items())).keys())
                 metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
 
