@@ -28,9 +28,6 @@ MAX_LEN = 6
 fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
-    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0),
-    dict(c_weights=False, joint=True, regularizer=None, recurrent_dropout=0),
-    dict(c_weights=True, joint=True, regularizer='l2', recurrent_dropout=0),
     dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0.9),
 ]
 
