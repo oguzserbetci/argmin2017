@@ -166,9 +166,9 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
                 params.update(fixed_param)
                 params.update(param)
                 params.update({'cv_iter': i})
-                #params.update({'tboard': {0:i,
-                                          # 1:k,
-                                          # 2:stringify(params)}})
+                params.update({'tboard': {0:i,
+                                          1:k,
+                                          2:stringify(params)}})
                 if param not in paramset:
                     paramset.append(params)
 
@@ -228,7 +228,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
         tboard_desc = params['tboard']
         tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
         tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run,
-                                  histogram_freq=100, batch_size=32, write_grads=True)
+                                  write_graph=False)
         callbacks.append(tensorboard)
 
     loss_weight = [0.5, 0.5] if params['joint'] else None
