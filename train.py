@@ -43,7 +43,9 @@ def create_model(seq_len=10, hidden_size=512, dropout=0.9, recurrent_dropout=0, 
     decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=recurrent_dropout, dropout=dropout)(encoder)
 
     if joint:
-        typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer, activation='softmax'), name='type')(encoder)
+        dropped = Dropout(dropout)(encoder)
+        typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
+                                    activation='softmax'), name='type')(dropped)
 
     # glorot_uniform initializer:
     # uniform([-limit,limit]) where limit = sqrt(6/(in+out))
