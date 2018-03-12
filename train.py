@@ -24,7 +24,7 @@ np.set_printoptions(precision=3, linewidth=1000, edgeitems=100, suppress=True)
 seed = 7
 np.random.seed(seed)
 
-MAX_LEN = 6
+MAX_LEN = 7
 fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
