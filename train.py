@@ -181,6 +181,11 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
                 score_keys = list(OrderedDict(sorted(metric.items())).keys())
                 metrics[-1][-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
 
+        fn = 'cross_validation/{iter}/train.pl'.format(iter=i)
+        os.makedirs(fn, exist_ok=True)
+        with open(fn, 'wb') as f:
+            metrics = dict(metrics=metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
+            pickle.dump(metrics, f)
             # print(np.shape(metrics[-1][-1]))
             # best_param_ind = np.argmax(np.max(np.mean(metrics[-1][-1], 0)[:,list(score_keys).index('link_macro_f1'),:],1))
             # print(best_param_ind)
@@ -199,7 +204,6 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
             # val_acc = [h[m][-1] for h in metrics[-1]]
             # mean, var = np.mean(val_acc, axis=0), np.var(val_acc, axis=0)
             # print("{}:{} (+/- {})".format(metric, mean, var))
-
     with open('cross_validation/train.pl', 'wb') as f:
         metrics = dict(metrics=metrics, metric_keys=metric_keys, score_keys=score_keys, params=paramset)
         pickle.dump(metrics, f)
