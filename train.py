@@ -238,7 +238,13 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     loss_weight = [0.5, 0.5] if params['joint'] else None
 
     if model is None:
-        model = create_model(seq_len=params['seq_len'], hidden_size=params['hidden_size'], dropout=params['dropout'], recurrent_dropout=params['recurrent_dropout'], regularizer=params['regularizer'], joint=params['joint'], n_gpu=n_gpu)
+        model = create_model(seq_len=params['seq_len'],
+                             hidden_size=params['hidden_size'],
+                             dropout=params['dropout'],
+                             recurrent_dropout=params['recurrent_dropout'],
+                             regularizer=params['regularizer'], joint=params['joint'],
+                             n_gpu=n_gpu, drop_encoder=params.get('drop_encoder'),
+                             drop_decoder=params.get('drop_decoder'))
 
         model.compile(optimizer=adam,
                       loss='categorical_crossentropy',
