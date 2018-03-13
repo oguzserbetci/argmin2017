@@ -172,7 +172,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
         Yt_training = Yt[training]
 
         for (k, (train, val)) in tqdm(enumerate(inner.split(X_training)), desc='inner'):
-            print('data lengths', len(train),len(val),len(X[training]))
+            print('data lengths', len(train),len(val),len(test))
             metrics[-1].append([])
             for param in paramsearch:
                 param.update({'cv_iter': i})
