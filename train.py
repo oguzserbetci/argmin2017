@@ -150,7 +150,7 @@ def preprocess(docs, links, types=None):
 def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     NUM_TRIALS = 10
     metrics = []
-    metric_keys = ['iteration', 'outer', 'inner', 'param', 'score', 'epoch']
+    metric_keys = ['outer', 'inner', 'param', 'score', 'epoch']
     paramset = []
     score_keys = []
 
