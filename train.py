@@ -243,9 +243,9 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
                              recurrent_dropout=params['recurrent_dropout'],
                              regularizer=params['regularizer'], joint=params['joint'],
                              n_gpu=n_gpu,
-                             drop_input=params.get('drop_input'),
+                             drop_input=params.get('drop_input', 0),
                              activity_regularizer=params.get('activity_regularizer'),
-                             drop_fc=params.get('drop_fc'))
+                             drop_fc=params.get('drop_fc', 0))
 
         model.compile(optimizer=adam,
                       loss='categorical_crossentropy',
