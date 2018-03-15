@@ -28,22 +28,25 @@ MAX_LEN = 7
 fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
-    dict(recurrent_dropout=0.9),
     dict(recurrent_dropout=0.9, dropout=0),
-    dict(recurrent_dropout=0.9, drop_encoder=0.9, drop_decoder=0.9),
-    dict(recurrent_dropout=0.9, drop_encoder=0.9),
-    dict(recurrent_dropout=0.9, drop_decoder=0.9),
+    dict(recurrent_dropout=0.9, dropout=0, input_dropout=0.9),
+    dict(recurrent_dropout=0.9, dropout=0, input_dropout=0.9, regularizer='l2'),
+    dict(recurrent_dropout=0.9, dropout=0, drop_encoder=0.9),
+    dict(recurrent_dropout=0.9, dropout=0, regularizer='l2'),
+    dict(recurrent_dropout=0, drop_decoder=0.9),
 ]
 
 
 def create_model(seq_len=10, hidden_size=512,
                  dropout=0.9, recurrent_dropout=0,
                  regularizer='l1', joint=False, n_gpu=None,
-                 drop_encoder=0,drop_decoder=0):
+                 drop_encoder=0,drop_decoder=0,
+                 input_dropout=0):
+
     inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
-    dropped = Dropout(dropout)(mask)
+    dropped = Dropout(input_dropout)(mask)
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
 
     encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder', recurrent_dropout=recurrent_dropout, dropout=dropout))(fc)
