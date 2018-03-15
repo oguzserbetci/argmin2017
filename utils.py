@@ -26,7 +26,7 @@ class JointMetrics(Callback):
         predict = self.model.predict(self.validation_data[0])
         mask_ind = self.validation_data[2].any(axis=2).flatten()
         link_predict = predict[0].argmax(2).flatten()[mask_ind]
-        type_predict = predict[0].argmax(2).flatten()[mask_ind]
+        type_predict = predict[1].argmax(2).flatten()[mask_ind]
         link_target = self.validation_data[1].argmax(2).flatten()[mask_ind]
         type_target = self.validation_data[2].argmax(2).flatten()[mask_ind]
         self.metrics['val_link_macro_f1'].append(f1_score(link_target, link_predict, average='macro'))
