@@ -25,41 +25,42 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 7
-fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
+fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512, seq_len=MAX_LEN, batch_size=10)
 
 paramsearch = [
     dict(recurrent_dropout=0.9, dropout=0),
-    dict(recurrent_dropout=0.9, dropout=0, input_dropout=0.9),
-    dict(recurrent_dropout=0.9, dropout=0, input_dropout=0.9, regularizer='l2'),
-    dict(recurrent_dropout=0.9, dropout=0, drop_encoder=0.9),
     dict(recurrent_dropout=0.9, dropout=0, regularizer='l2'),
-    dict(recurrent_dropout=0, drop_decoder=0.9),
+    dict(recurrent_dropout=0.9, dropout=0, activity_regularizer='l1'),
+    dict(recurrent_dropout=0.9, dropout=0, drop_input=0.9),
+    dict(recurrent_dropout=0.9, dropout=0, drop_input=0.9, regularizer='l2'),
+    dict(recurrent_dropout=0.9, dropout=0, drop_fc=0.9),
+    dict(recurrent_dropout=0.9, dropout=0, drop_fc=0.9, regularizer='l2'),
 ]
 
 
 def create_model(seq_len=10, hidden_size=512,
                  dropout=0.9, recurrent_dropout=0,
-                 regularizer='l1', joint=False, n_gpu=None,
+                 regularizer=None,
+                 activity_regularizer=None,
+                 joint=False, n_gpu=None,
                  drop_encoder=0,drop_decoder=0,
-                 input_dropout=0):
+                 drop_input=0, drop_fc=0):
 
     inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
-    dropped = Dropout(input_dropout)(mask)
+    dropped = Dropout(drop_input)(mask)
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
+    dropped = Dropout(drop_fc)(fc)
 
-    encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder', recurrent_dropout=recurrent_dropout, dropout=dropout))(fc)
+    encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder',
+                                 recurrent_dropout=recurrent_dropout,
+                                 dropout=dropout))(dropped)
     decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=recurrent_dropout, dropout=dropout)(encoder)
-
-    if drop_encoder:
-        encoder = Dropout(drop_encoder)(encoder)
-
-    if drop_decoder:
-        decoder = Dropout(drop_decoder)(decoder)
 
     if joint:
         typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
+                                    activity_regularizer=activity_regularizer,
                                     activation='softmax'), name='type')(encoder)
 
     # glorot_uniform initializer:
@@ -73,16 +74,13 @@ def create_model(seq_len=10, hidden_size=512,
     add = Add(name='W1E_W2Di')
     tanh = Activation('tanh', name='tanh')
 
-    # glorot_uniform initializer:
-    # for hidden=512: uniform(-0,108, +0,108)
-    vt = Dense(1, use_bias=False, kernel_regularizer=regularizer, name='vT')
-    softmax = Activation('softmax', name='link')
-
     attention = add([E,DD])
     attention = tanh(attention)
+
+    vt = Dense(1, use_bias=False, kernel_regularizer=regularizer, name='vT')
     attention = vt(attention)
     attention = Lambda(lambda x: K.squeeze(x, -1))(attention)
-    attention = softmax(attention)
+    attention = Activation('softmax', name='link')(attention)
 
     if joint:
         model = Model(inputs=inp, outputs=[attention, typ])
@@ -205,6 +203,7 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
                                  score_keys=score_keys, params=paramset,
                                  training_idx=training, test_idx=test)
             pickle.dump(training_data, f)
+        break
 
     with open('cross_validation/train.pl', 'wb') as f:
         training_data = dict(metrics=metrics, metric_keys=metric_keys,
@@ -231,7 +230,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     if params.get('tboard'):
         tboard_desc = params['tboard']
         tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
-        tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run,
+        tensorboard = TensorBoard(log_dir='logs/'+tboard_run,
                                   write_graph=False)
         callbacks.append(tensorboard)
 
@@ -242,13 +241,15 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
                              hidden_size=params['hidden_size'],
                              dropout=params['dropout'],
                              recurrent_dropout=params['recurrent_dropout'],
+                             activity_regularizer=params['activity_regularizer'],
                              regularizer=params['regularizer'], joint=params['joint'],
-                             n_gpu=n_gpu, drop_encoder=params.get('drop_encoder'),
-                             drop_decoder=params.get('drop_decoder'))
+                             n_gpu=n_gpu,
+                             drop_input=params.get('drop_input'),
+                             drop_fc=params.get('drop_fc'))
 
         model.compile(optimizer=adam,
                       loss='categorical_crossentropy',
-                      metrics=['categorical_accuracy'],
+                      metrics=['categorical_accuracy', utils.f1],
                       sample_weight_mode='temporal',
                       loss_weights=loss_weight)
 
