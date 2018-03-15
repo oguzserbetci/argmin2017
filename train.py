@@ -230,7 +230,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     if params.get('tboard'):
         tboard_desc = params['tboard']
         tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
-        tensorboard = TensorBoard(log_dir='logs/'+tboard_run,
+        tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run,
                                   write_graph=False)
         callbacks.append(tensorboard)
 
@@ -241,10 +241,10 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
                              hidden_size=params['hidden_size'],
                              dropout=params['dropout'],
                              recurrent_dropout=params['recurrent_dropout'],
-                             activity_regularizer=params['activity_regularizer'],
                              regularizer=params['regularizer'], joint=params['joint'],
                              n_gpu=n_gpu,
                              drop_input=params.get('drop_input'),
+                             activity_regularizer=params.get('activity_regularizer'),
                              drop_fc=params.get('drop_fc'))
 
         model.compile(optimizer=adam,
