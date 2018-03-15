@@ -25,14 +25,14 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 7
-fixed_param = dict(hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
+fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512, seq_len=MAX_LEN, batch_size=10, dropout=0.9)
 
 paramsearch = [
-    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0.9),
-    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0.9, dropout=0),
-    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0.9, drop_encoder=0.9, drop_decoder=0.9),
-    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0.9, drop_encoder=0.9),
-    dict(c_weights=True, joint=True, regularizer=None, recurrent_dropout=0.9, drop_decoder=0.9),
+    dict(recurrent_dropout=0.9),
+    dict(recurrent_dropout=0.9, dropout=0),
+    dict(recurrent_dropout=0.9, drop_encoder=0.9, drop_decoder=0.9),
+    dict(recurrent_dropout=0.9, drop_encoder=0.9),
+    dict(recurrent_dropout=0.9, drop_decoder=0.9),
 ]
 
 
