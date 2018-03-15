@@ -56,7 +56,13 @@ def create_model(seq_len=10, hidden_size=512,
     encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder',
                                  recurrent_dropout=recurrent_dropout,
                                  dropout=dropout))(dropped)
-    decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=recurrent_dropout, dropout=dropout)(encoder)
+
+    d_input = Lambda(lambda x: x[-1:])(encoder)
+
+    decoder = LSTM(hidden_size, name='decoder',
+                   return_sequences=True,
+                   recurrent_dropout=recurrent_dropout,
+                   dropout=dropout)(d_input)
 
     if joint:
         typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
