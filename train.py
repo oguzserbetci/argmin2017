@@ -25,16 +25,11 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 7
-fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512, seq_len=MAX_LEN, batch_size=10)
+fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512,
+                   seq_len=MAX_LEN, batch_size=10)
 
 paramsearch = [
-    dict(recurrent_dropout=0.9, dropout=0),
-    dict(recurrent_dropout=0.9, dropout=0, regularizer='l2'),
-    dict(recurrent_dropout=0.9, dropout=0, activity_regularizer='l1'),
-    dict(recurrent_dropout=0.9, dropout=0, drop_input=0.9),
-    dict(recurrent_dropout=0.9, dropout=0, drop_input=0.9, regularizer='l2'),
-    dict(recurrent_dropout=0.9, dropout=0, drop_fc=0.9),
-    dict(recurrent_dropout=0.9, dropout=0, drop_fc=0.9, regularizer='l2'),
+    dict(new_arch=True, dropout=0, recurrent_dropout=0.9),
 ]
 
 
