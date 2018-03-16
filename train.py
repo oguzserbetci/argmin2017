@@ -48,10 +48,11 @@ def create_model(seq_len=10, hidden_size=512,
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
     dropped = Dropout(drop_fc)(fc)
 
-    encoder = Bidirectional(LSTM(hidden_size//2, name='encoder',
-                                 return_sequences=True,
-                                 recurrent_dropout=recurrent_dropout,
-                                 dropout=dropout))(dropped)
+    encoder, forward_h, forward_c, backward_h, backward_c = Bidirectional(LSTM(hidden_size//2, name='encoder',
+                                                                               return_state=True,
+                                                                               return_sequences=True,
+                                                                               recurrent_dropout=recurrent_dropout,
+                                                                               dropout=dropout))(dropped)
 
     d_input = Lambda(lambda x: x[-1:])(encoder)
 
