@@ -91,6 +91,7 @@ class MTCorpus(object):
                 xml = ET.parse(file)
                 ac_tree = read_ac(xml)
                 y = [int(ac_tree.search('a{}'.format(i)).p_value[1:]) for i in range(1, len(ac_tree) + 1)]
+                y = [i - min(y) for i in y]
                 self.links.append(y)
                 types = [int(ac_tree.search('a{}'.format(i)).is_root) for i in range(1, len(ac_tree) + 1)]
                 self.types.append(types)
