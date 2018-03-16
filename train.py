@@ -103,9 +103,9 @@ def create_model(seq_len=10, hidden_size=512,
     attention = Activation('softmax', name='link')(attention)
 
     if joint:
-        model = Model(inputs=encoder_inputs, outputs=[attention, typ])
+        model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=[attention, typ])
     else:
-        model = Model(inputs=encoder_inputs, outputs=attention)
+        model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=attention)
 
     if n_gpu:
         parallel_model = multi_gpu_model(model, gpus=n_gpu)
