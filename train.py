@@ -75,10 +75,9 @@ def create_model(seq_len=10, hidden_size=512,
                          name='FC_input')(decoder_inputs)
 
     decoder = LSTM(hidden_size, name='decoder',
-                   initial_state=encoder_states,
                    return_sequences=True,
                    recurrent_dropout=recurrent_dropout,
-                   dropout=dropout)(decoder_inputs)
+                   dropout=dropout)(decoder_inputs, initial_state=encoder_states)
 
     # glorot_uniform initializer:
     # uniform([-limit,limit]) where limit = sqrt(6/(in+out))
