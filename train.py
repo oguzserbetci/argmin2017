@@ -94,18 +94,18 @@ def create_model(seq_len=10, hidden_size=512,
     add = Add(name='W1E_W2Di')
     tanh = Activation('tanh', name='tanh')
 
-    attention = add([E,DD])
-    attention = tanh(attention)
+    pointer = add([E,DD])
+    pointer = tanh(pointer)
 
     vt = Dense(1, use_bias=False, kernel_regularizer=regularizer, name='vT')
-    attention = vt(attention)
-    attention = Lambda(lambda x: K.squeeze(x, -1))(attention)
-    attention = Activation('softmax', name='link')(attention)
+    pointer = vt(pointer)
+    pointer = Lambda(lambda x: K.squeeze(x, -1))(pointer)
+    pointer = Activation('softmax', name='link')(pointer)
 
     if joint:
-        model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=[attention, typ])
+        model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=[pointer, typ])
     else:
-        model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=attention)
+        model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=pointer)
 
     if n_gpu:
         parallel_model = multi_gpu_model(model, gpus=n_gpu)
