@@ -42,7 +42,7 @@ def create_model(seq_len=10, hidden_size=512,
                  drop_encoder=0,drop_decoder=0,
                  drop_input=0, drop_fc=0):
 
-    encoder_inputs = Input(shape=(seq_len, REPR_SIZE), name='input')
+    encoder_inputs = Input(shape=(None, REPR_SIZE), name='input')
 
     mask = Masking(mask_value=0)(encoder_inputs)
     dropped = Dropout(drop_input)(mask)
