@@ -55,6 +55,11 @@ def create_model(seq_len=10, hidden_size=512,
                                                                                recurrent_dropout=recurrent_dropout,
                                                                                dropout=dropout))(dropped)
 
+    if joint:
+        typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
+                                    activity_regularizer=activity_regularizer,
+                                    activation='softmax'), name='type')(encoder)
+
     forward_h = Lambda(lambda x: x[-1:])(forward_h)
     forward_c = Lambda(lambda x: x[-1:])(forward_c)
     backward_h = Lambda(lambda x: x[-1:])(backward_h)
@@ -74,11 +79,6 @@ def create_model(seq_len=10, hidden_size=512,
                    return_sequences=True,
                    recurrent_dropout=recurrent_dropout,
                    dropout=dropout)(decoder_inputs)
-
-    if joint:
-        typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
-                                    activity_regularizer=activity_regularizer,
-                                    activation='softmax'), name='type')(encoder)
 
     # glorot_uniform initializer:
     # uniform([-limit,limit]) where limit = sqrt(6/(in+out))
