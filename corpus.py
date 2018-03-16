@@ -125,7 +125,7 @@ class MTCorpus(object):
 
                 # min and max across token embeddings
                 mean = np.mean(vectors, axis=0)
-                pos = [int(i==0)]
+                pos = [int(i == 0)]
                 r = np.concatenate([pos, mean], axis=0)
                 representations[-1].append(r)
         return np.array(representations)
@@ -147,7 +147,7 @@ class MTCorpus(object):
                 maximum = np.max(vectors, axis=0)
                 minimum = np.min(vectors, axis=0)
                 mean = np.mean(vectors, axis=0)
-                pos = [int(i==0)]
+                pos = [int(i == 0)]
                 r = np.concatenate([pos, mean, maximum, minimum, bow], axis=0)
                 representations[-1].append(r)
         return np.array(representations)
