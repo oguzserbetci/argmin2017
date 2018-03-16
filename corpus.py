@@ -102,6 +102,7 @@ class MTCorpus(object):
         self.lemma_indices = dict(zip(self.lemmas.keys(),range(len(self.lemmas))))
         self.X_large = self._x_large()
         self.X_small = self._x_small()
+        self.X_decoder = self._decoder()
 
     def represent(self, sent):
         # Tokenize sentence
@@ -128,6 +129,7 @@ class MTCorpus(object):
                 pos = [int(i == 0)]
                 r = np.concatenate([pos, mean], axis=0)
                 representations[-1].append(r)
+
         return np.array(representations)
 
     def _x_large(self):
@@ -150,4 +152,13 @@ class MTCorpus(object):
                 pos = [int(i == 0)]
                 r = np.concatenate([pos, mean, maximum, minimum, bow], axis=0)
                 representations[-1].append(r)
+
         return np.array(representations)
+
+    def _decoder(self):
+        representations = []
+        for x, links in zip(self.X_large, self.links):
+            representation = []
+            for link in links:
+                representation.append(x[link])
+            representations.append(representation)
