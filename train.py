@@ -25,6 +25,7 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 7
+REPR_SIZE = 2640
 fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512,
                    seq_len=MAX_LEN, batch_size=10)
 
@@ -41,9 +42,9 @@ def create_model(seq_len=10, hidden_size=512,
                  drop_encoder=0,drop_decoder=0,
                  drop_input=0, drop_fc=0):
 
-    inp = Input(shape=(seq_len, 2640), name='input')
+    encoder_inputs = Input(shape=(seq_len, REPR_SIZE), name='input')
 
-    mask = Masking(mask_value=0)(inp)
+    mask = Masking(mask_value=0)(encoder_inputs)
     dropped = Dropout(drop_input)(mask)
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
     dropped = Dropout(drop_fc)(fc)
@@ -89,9 +90,9 @@ def create_model(seq_len=10, hidden_size=512,
     attention = Activation('softmax', name='link')(attention)
 
     if joint:
-        model = Model(inputs=inp, outputs=[attention, typ])
+        model = Model(inputs=encoder_inputs, outputs=[attention, typ])
     else:
-        model = Model(inputs=inp, outputs=attention)
+        model = Model(inputs=encoder_inputs, outputs=attention)
 
     if n_gpu:
         parallel_model = multi_gpu_model(model, gpus=n_gpu)
