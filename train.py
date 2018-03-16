@@ -1,6 +1,6 @@
 from keras.models import Model
 from keras import backend as K
-from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda
+from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate
 from keras.layers import TimeDistributed, Bidirectional, Masking, Dropout
 
 from keras.preprocessing.sequence import pad_sequences
@@ -56,8 +56,18 @@ def create_model(seq_len=10, hidden_size=512,
                                                                                dropout=dropout))(dropped)
 
     d_input = Lambda(lambda x: x[-1:])(encoder)
+    forward_h = Lambda(lambda x: x[-1:])(forward_h)
+    forward_c = Lambda(lambda x: x[-1:])(forward_c)
+    backward_h = Lambda(lambda x: x[-1:])(backward_h)
+    backward_c = Lambda(lambda x: x[-1:])(backward_c)
+
+    encoder_h = Concatenate()([forward_h, backward_h])
+    encoder_c = Concatenate()([forward_c, backward_c])
+    encoder_states = [encoder_h, encoder_c]
+
 
     decoder = LSTM(hidden_size, name='decoder',
+                   initial_state=encoder_states,
                    return_sequences=True,
                    recurrent_dropout=recurrent_dropout,
                    dropout=dropout)(d_input)
