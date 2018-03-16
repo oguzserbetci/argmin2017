@@ -48,7 +48,8 @@ def create_model(seq_len=10, hidden_size=512,
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
     dropped = Dropout(drop_fc)(fc)
 
-    encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder',
+    encoder = Bidirectional(LSTM(hidden_size//2, name='encoder',
+                                 return_sequences=True,
                                  recurrent_dropout=recurrent_dropout,
                                  dropout=dropout))(dropped)
 
@@ -67,8 +68,11 @@ def create_model(seq_len=10, hidden_size=512,
     # glorot_uniform initializer:
     # uniform([-limit,limit]) where limit = sqrt(6/(in+out))
     # for hidden=512: uniform(-0.07, +0.07)
-    E = TimeDistributed(Dense(hidden_size, use_bias=False, kernel_regularizer=regularizer), name='E')(encoder)
-    D = TimeDistributed(Dense(hidden_size, use_bias=False, kernel_regularizer=regularizer), name='D')(decoder)
+    E = TimeDistributed(Dense(hidden_size, use_bias=False,
+                              kernel_regularizer=regularizer), name='E')(encoder)
+
+    D = TimeDistributed(Dense(hidden_size, use_bias=False,
+                              kernel_regularizer=regularizer), name='D')(decoder)
 
     DD = Lambda(lambda x: K.repeat_elements(K.expand_dims(x, 2), seq_len, 2))(D)
 
