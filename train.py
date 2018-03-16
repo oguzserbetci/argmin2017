@@ -55,7 +55,6 @@ def create_model(seq_len=10, hidden_size=512,
                                                                                recurrent_dropout=recurrent_dropout,
                                                                                dropout=dropout))(dropped)
 
-    d_input = Lambda(lambda x: x[-1:])(encoder)
     forward_h = Lambda(lambda x: x[-1:])(forward_h)
     forward_c = Lambda(lambda x: x[-1:])(forward_c)
     backward_h = Lambda(lambda x: x[-1:])(backward_h)
@@ -65,12 +64,16 @@ def create_model(seq_len=10, hidden_size=512,
     encoder_c = Concatenate()([forward_c, backward_c])
     encoder_states = [encoder_h, encoder_c]
 
+    decoder_inputs = Input(shape=(None, REPR_SIZE))
+    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid',
+                               kernel_regularizer=regularizer),
+                         name='FC_input')(decoder_inputs)
 
     decoder = LSTM(hidden_size, name='decoder',
                    initial_state=encoder_states,
                    return_sequences=True,
                    recurrent_dropout=recurrent_dropout,
-                   dropout=dropout)(d_input)
+                   dropout=dropout)(decoder_inputs)
 
     if joint:
         typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
