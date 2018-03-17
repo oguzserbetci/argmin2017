@@ -1,8 +1,8 @@
-PWD /Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/report
+PWD /Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/argmin2017/report
 INPUT /usr/local/texlive/2017/texmf.cnf
 INPUT /usr/local/texlive/2017/texmf-dist/web2c/texmf.cnf
 INPUT /usr/local/texlive/2017/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/report/main.tex
+INPUT /Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/argmin2017/report/main.tex
 OUTPUT main.log
 INPUT /usr/local/texlive/2017/texmf-dist/tex/latex/base/article.cls
 INPUT /usr/local/texlive/2017/texmf-dist/tex/latex/base/article.cls
@@ -141,11 +141,11 @@ INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/public/mathpazo/zplmr7t.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb7t.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplr7t.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb7t.tfm
-INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb7t.tfm
-INPUT main.bbl
-INPUT main.bbl
-INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplri7t.tfm
+INPUT fig/microtext.jpg
+INPUT ./fig/microtext.jpg
 OUTPUT main.pdf
+INPUT ./fig/microtext.jpg
+INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplri7t.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/vf/adobe/palatino/pplr7t.vf
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplr8r.tfm
 INPUT /usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map
@@ -161,6 +161,12 @@ INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb8r.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/vf/adobe/palatino/pplb7t.vf
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb8r.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/vf/adobe/palatino/pplr7t.vf
+INPUT /usr/local/texlive/2017/texmf-dist/fonts/vf/adobe/palatino/pplri7t.vf
+INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplri8r.tfm
+INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb7t.tfm
+INPUT main.bbl
+INPUT main.bbl
+INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplri7t.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/vf/adobe/palatino/pplb7t.vf
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb8r.tfm
 INPUT /usr/local/texlive/2017/texmf-dist/fonts/vf/adobe/palatino/pplri7t.vf

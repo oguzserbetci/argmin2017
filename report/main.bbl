@@ -1,8 +1,15 @@
 \begin{thebibliography}{1}
 
-\bibitem{Porush:1997}
-David Porush.
-\newblock {\em A Short Guide to Writing about Science}.
-\newblock Longman Publishing Group, 1997.
+\bibitem{peldszus2015annotated}
+Andreas Peldszus and Manfred Stede.
+\newblock An annotated corpus of argumentative microtexts.
+\newblock In {\em Proceedings of the First Conference on Argumentation, Lisbon,
+  Portugal}, June 2015.
+
+\bibitem{potash2017here}
+Peter Potash, Alexey Romanov, and Anna Rumshisky.
+\newblock Here's my point: Joint pointer architecture for argument mining.
+\newblock In {\em Proceedings of the 2017 Conference on Empirical Methods in
+  Natural Language Processing}, pages 1364--1373, 2017.
 
 \end{thebibliography}

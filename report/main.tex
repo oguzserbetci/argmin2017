@@ -31,7 +31,20 @@ Maybe just short description of the task and results here
 
 
 \section{Data \& Task}
-that's an easy one
+We worked with the arg-microtext corpus \cite{peldszus2015annotated}, which contains 112 short argumentative texts 
+(originally in German and profesionally translated to English). Later we received preliminary annotations of the new microtexts
+and could incorporate them into the project.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{fig/microtext.jpg}
+    \caption{One example from arg-microtext corpus and its argumentation graph.
+            \\Round nodes are proponent's nodes, square ones are opponent's nodes. The arcs connecting the nodes represent different supporting and attacking moves.}
+    \label{fig:microtext}
+        \end{figure}
+
+As can be seen in the figure \ref{fig:microtext}, each text in the corpus is a single tree and argument components (ACs) are claims and premises.  
+We decided to concentrate on two tasks: classify the type of an AC (claim or premise), and determining the links between ACs.
 
 \section{Approach}
 Here we could try describing the workflow

@@ -1,13 +1,13 @@
 # Fdb version 3
-["bibtex main"] 1521100226 "main.aux" "main.bbl" "main" 1521100227
+["bibtex main"] 1521301813 "main.aux" "main.bbl" "main" 1521303276
   "/usr/local/texlive/2017/texmf-dist/bibtex/bst/base/plain.bst" 1480098433 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
-  "main.aux" 1521100227 446 2aed50bea6129bb08fc8171249f19e05 ""
-  "references.bib" 1520944200 153 21bda3d90e03e5dceb9e111491ce759e ""
+  "main.aux" 1521303275 916 4ba31f3965fc6f566ea6f4f22237d7d2 ""
+  "references.bib" 1521300106 566 b1797392c03499d358a924c8dff57402 ""
   (generated)
   "main.blg"
   "main.bbl"
-["pdflatex"] 1521100226 "/Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/report/main.tex" "main.pdf" "main" 1521100227
-  "/Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/report/main.tex" 1521100225 1209 5486df693cb4d83a70cb94d8f63defe1 ""
+["pdflatex"] 1521303273 "/Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/argmin2017/report/main.tex" "main.pdf" "main" 1521303276
+  "/Users/mstazherova/Documents/uni-potsdam/WS2017/Argumentation Mining/argmin2017/report/main.tex" 1521303273 2139 a12d87edda9213df05f59c082cc0dd9b ""
   "/usr/local/texlive/2017/texmf-dist/fonts/enc/dvips/base/8r.enc" 1480098666 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2017/texmf-dist/fonts/map/fontname/texfonts.map" 1480098670 3287 e6b82fe08f5336d4d5ebc73fb1152e87 ""
   "/usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/palatino/pplb7t.tfm" 1480098688 1616 371d1ee60c04b008c8fd760060cd34f1 ""
@@ -87,10 +87,11 @@
   "/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1495593472 2350277 a699055bee05bf8a40b0504752487295 ""
   "/usr/local/texlive/2017/texmf-var/web2c/pdftex/pdflatex.fmt" 1520951575 4129592 1a5aa612fc2a51241be34581e5721b4b ""
   "/usr/local/texlive/2017/texmf.cnf" 1495593465 577 2b71d4d888f9e5560b2e99985915a9fa ""
-  "main.aux" 1521100227 446 2aed50bea6129bb08fc8171249f19e05 ""
-  "main.bbl" 1521100226 185 52f22a07b4b38819f9c14b0c3d841a94 "bibtex main"
-  "main.tex" 1521100225 1209 5486df693cb4d83a70cb94d8f63defe1 ""
+  "fig/microtext.jpg" 1521300988 73056 57285d1836933d16c50658b2b3524330 ""
+  "main.aux" 1521303275 916 4ba31f3965fc6f566ea6f4f22237d7d2 ""
+  "main.bbl" 1521301813 566 28c22a2914042f627764539ba29743fd "bibtex main"
+  "main.tex" 1521303273 2139 a12d87edda9213df05f59c082cc0dd9b ""
   (generated)
   "main.aux"
-  "main.pdf"
   "main.log"
+  "main.pdf"
