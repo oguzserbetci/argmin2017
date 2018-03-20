@@ -3,6 +3,7 @@ import numpy as np
 import spacy
 from collections import defaultdict
 import xml.etree.ElementTree as ET
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 class ArgumentTree(object):
@@ -74,7 +75,7 @@ def read_ac(xml):
     return trees[0].root
 
 
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en_core_web_lg', disable=['parser', 'tagger', 'ner'])
 
 
 class MTCorpus(object):
@@ -83,83 +84,64 @@ class MTCorpus(object):
         self.links = []
         self.types = []
         self.documents = []
-        self.tokens = []
-        self.lemmas = defaultdict(int)
+        self.vectors = []
 
         for file in files:
             with open(file,'r',encoding='UTF-8') as file:
                 xml = ET.parse(file)
                 ac_tree = read_ac(xml)
                 y = [int(ac_tree.search('a{}'.format(i)).p_value[1:]) for i in range(1, len(ac_tree) + 1)]
-                y = [i - min(y) for i in y]
                 self.links.append(y)
                 types = [int(ac_tree.search('a{}'.format(i)).is_root) for i in range(1, len(ac_tree) + 1)]
                 self.types.append(types)
                 '''Tokenizes a string.'''
-                acs = [ac_tree.search('e{}'.format(i)).text for i in range(1, len(ac_tree) + 1)]
-                document = [self.represent(ac) for ac in acs]
-                self.documents.append(document)
+                acs = ['0']  # start token for decoder input
+                acs += [ac_tree.search('e{}'.format(i)).text for i in range(1, len(ac_tree) + 1)]
+                piped_acs = list(nlp.pipe(acs))
+                acs = [' '.join([word.text for word in ac]) for ac in piped_acs]
+                vectors = [[word.vector for word in ac] for ac in piped_acs]
+                self.vectors.append(vectors)
+                self.documents.append(acs)  # list of list of sentences.
 
-        self.lemma_indices = dict(zip(self.lemmas.keys(),range(len(self.lemmas))))
-        self.X_large = self._x_large()
-        self.X_small = self._x_small()
-        self.X_decoder = self._decoder()
+        base = np.min(np.min(self.links))
+        self.links = [np.array(link) - base for link in self.links]
 
-    def represent(self, sent):
-        # Tokenize sentence
-        tokens = nlp(sent)
-        # Build lemma vocabulary
-        for token in tokens:
-            self.lemmas[token.lemma_] += 1
-        # Return tokens
-        return tokens
+        self.clf = CountVectorizer()
+        self.clf.fit(sent for doc in self.documents for sent in doc)
 
-    def _x_small(self):
-        representations = []
+        self.encoder_input, self.decoder_input = self._inputs()
 
-        for document in self.documents:
-            representations.append([])
-            for i, ac in enumerate(document):
-                vectors = []
-                for token in ac:
-                    vectors.append(token.vector)
-                vectors = np.array(vectors)
+    def _inputs(self):
+        encoder_input = []
+        decoder_input = []
 
-                # min and max across token embeddings
-                mean = np.mean(vectors, axis=0)
-                pos = [int(i == 0)]
-                r = np.concatenate([pos, mean], axis=0)
-                representations[-1].append(r)
-
-        return np.array(representations)
-
-    def _x_large(self):
-        representations = []
-
-        for document in self.documents:
-            representations.append([])
-            for i, ac in enumerate(document):
-                vectors = []
-                bow = np.zeros(len(self.lemmas))
-                for token in ac:
-                    bow[self.lemma_indices[token.lemma_]] += 1
-                    vectors.append(token.vector)
-                vectors = np.array(vectors)
-
-                # min and max across token embeddings
-                maximum = np.max(vectors, axis=0)
-                minimum = np.min(vectors, axis=0)
-                mean = np.mean(vectors, axis=0)
-                pos = [int(i == 0)]
-                r = np.concatenate([pos, mean, maximum, minimum, bow], axis=0)
-                representations[-1].append(r)
-
-        return np.array(representations)
-
-    def _decoder(self):
-        representations = []
-        for x, links in zip(self.X_large, self.links):
+        for document, vectors, links in zip(self.documents, self.vectors, self.links):
+            indices = np.concatenate([[0], np.array(links)+1])
             representation = []
-            for link in links:
-                representation.append(x[link])
-            representations.append(representation)
+            for i, (ac, ac_vectors, ac_indices) in enumerate(zip(document, vectors, indices)):
+                bow = np.squeeze(self.clf.transform([ac]).toarray())
+                # min and max across token embeddings
+                maximum = np.max(ac_vectors, axis=0)
+                minimum = np.min(ac_vectors, axis=0)
+                mean = np.mean(ac_vectors, axis=0)
+                pos = [int(i == 1)]
+                r = np.concatenate([pos, maximum, minimum, bow, mean], axis=0)
+                representation.append(r)
+            representation = np.array(representation)
+
+            encoder_input.append(representation[1:])
+            decoder_input.append(representation[indices[:-1]])
+
+        return encoder_input, decoder_input
+
+
+def write_on_disk():
+    corpus = MTCorpus()
+    np.save('encoder_input', corpus.encoder_input)
+    np.save('decoder_input', corpus.decoder_input)
+    np.save('Y_links_1', corpus.links)
+    np.save('Y_types_1', corpus.types)
+
+
+if __name__ == "__main__":
+    write_on_disk()
