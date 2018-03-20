@@ -45,16 +45,15 @@ def create_model(seq_len=10, hidden_size=512,
 
     encoder_inputs = Input(shape=(None, REPR_SIZE), name='input')
 
-    mask = Masking(mask_value=0)(encoder_inputs)
-    dropped = Dropout(drop_input)(mask)
-    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
-    dropped = Dropout(drop_fc)(fc)
+    masked = Masking(mask_value=0)(encoder_inputs)
+    fc_enc = TimeDistributed(Dense(hidden_size, activation='sigmoid',
+                                   kernel_regularizer=regularizer), name='FC_input')(masked)
 
     encoder, forward_h, forward_c, backward_h, backward_c = Bidirectional(LSTM(hidden_size//2, name='encoder',
                                                                                return_state=True,
                                                                                return_sequences=True,
                                                                                recurrent_dropout=recurrent_dropout,
-                                                                               dropout=dropout))(dropped)
+                                                                               dropout=dropout))(fc_enc)
 
     if joint:
         typ = TimeDistributed(Dense(2, use_bias=True, kernel_regularizer=regularizer,
@@ -68,17 +67,17 @@ def create_model(seq_len=10, hidden_size=512,
 
     encoder_h = Concatenate()([forward_h, backward_h])
     encoder_c = Concatenate()([forward_c, backward_c])
-    encoder_states = [encoder_h, encoder_c]
+    last_encoder_state = [encoder_h, encoder_c]
 
     decoder_inputs = Input(shape=(None, REPR_SIZE))
-    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid',
-                               kernel_regularizer=regularizer),
-                         name='FC_input')(decoder_inputs)
+    fc_dec = TimeDistributed(Dense(hidden_size, activation='sigmoid',
+                                   kernel_regularizer=regularizer),
+                             name='FC_input')(decoder_inputs)
 
     decoder = LSTM(hidden_size, name='decoder',
                    return_sequences=True,
                    recurrent_dropout=recurrent_dropout,
-                   dropout=dropout)(decoder_inputs, initial_state=encoder_states)
+                   dropout=dropout)(fc_dec, initial_state=last_encoder_state)
 
     # glorot_uniform initializer:
     # uniform([-limit,limit]) where limit = sqrt(6/(in+out))
