@@ -31,6 +31,7 @@ fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512
 
 paramsearch = [
     dict(di=True, dropout=0, recurrent_dropout=0.9, regularizer='l2'),
+    dict(di=True, dropout=0, recurrent_dropout=0.9),
 ]
 
 
