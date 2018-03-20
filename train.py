@@ -47,7 +47,7 @@ def create_model(seq_len=10, hidden_size=512,
 
     masked = Masking(mask_value=0)(encoder_inputs)
     fc_enc = TimeDistributed(Dense(hidden_size, activation='sigmoid',
-                                   kernel_regularizer=regularizer), name='FC_input')(masked)
+                                   kernel_regularizer=regularizer), name='FC_enc')(masked)
 
     encoder, forward_h, forward_c, backward_h, backward_c = Bidirectional(LSTM(hidden_size//2, name='encoder',
                                                                                return_state=True,
@@ -72,7 +72,7 @@ def create_model(seq_len=10, hidden_size=512,
     decoder_inputs = Input(shape=(None, REPR_SIZE))
     fc_dec = TimeDistributed(Dense(hidden_size, activation='sigmoid',
                                    kernel_regularizer=regularizer),
-                             name='FC_input')(decoder_inputs)
+                             name='FC_dec')(decoder_inputs)
 
     decoder = LSTM(hidden_size, name='decoder',
                    return_sequences=True,
