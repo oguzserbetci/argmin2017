@@ -25,7 +25,7 @@ seed = 7
 np.random.seed(seed)
 
 MAX_LEN = 7
-REPR_SIZE = 2640
+REPR_SIZE = 2927
 fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512,
                    seq_len=MAX_LEN, batch_size=10)
 
@@ -144,19 +144,21 @@ def get_class_weights(Y):
     return class_weights
 
 
-def preprocess(docs, links, types=None):
-    docs_filtered = np.array([x for x in docs if len(x) <= MAX_LEN])
+def preprocess(enc_input, dec_input, links, types=None):
+    enc_input_filtered = np.array([x for x in enc_input if len(x) <= MAX_LEN])
+    dec_input_filtered = np.array([x for x in dec_input if len(x) <= MAX_LEN])
     links_filtered = np.array([x for x in links if len(x) <= MAX_LEN])
     types_filtered = np.array([x for x in types if len(x) <= MAX_LEN])
 
     # pad with zeros, truncate longer than 6
-    X = pad_sequences(docs_filtered, dtype=float, truncating='post',padding='post')
+    Xe = pad_sequences(enc_input_filtered, dtype=float, truncating='post',padding='post')
+    Xd = pad_sequences(dec_input_filtered, dtype=float, truncating='post',padding='post')
 
     # convert links 1,1,2 -> [1,0,0]
     #                        [1,0,0]
     #                        [0,1,0]
-    Yl = [to_categorical([np.array(ys)-1 for ys in y],
-                         num_classes=X.shape[1]) for y in links_filtered]
+    Yl = [to_categorical([np.array(ys) for ys in y],
+                         num_classes=Xe.shape[1]) for y in links_filtered]
     Yl = pad_sequences(Yl, dtype=int, truncating='post', padding='post')
     if types is not None:
         Yt = [pad_sequences(to_categorical(np.array(y)), truncating='post',
@@ -165,10 +167,10 @@ def preprocess(docs, links, types=None):
     else:
         Yt = None
 
-    return X, Yl, Yt, docs_filtered, links_filtered, types_filtered
+    return Xe, Xd, Yl, Yt, enc_input_filtered, dec_input_filtered, links_filtered, types_filtered
 
 
-def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
+def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
     NUM_TRIALS = 10
     metrics = []
     metric_keys = ['outer', 'inner', 'param', 'score', 'epoch']
@@ -180,40 +182,43 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     training_idx = []
     test_idx = []
 
-    for (i, (training, test)) in tqdm(enumerate(outer.split(X)), desc='outer'):
+    for (i, (training, test)) in tqdm(enumerate(outer.split(Xe)), desc='outer'):
         training_idx.append(training)
         test_idx.append(test)
         inner = KFold(n_splits=5, shuffle=True, random_state=inner_seed)
 
         metrics.append([])
 
-        X_training = X[training]
+        Xe_training = Xe[training]
+        Xd_training = Xd[training]
         Yl_training = Yl[training]
         Yt_training = Yt[training]
 
-        for (k, (train, val)) in tqdm(enumerate(inner.split(X_training)), desc='inner'):
+        for (k, (train, val)) in tqdm(enumerate(inner.split(Xe_training)), desc='inner'):
             print('data lengths', len(train),len(val),len(test))
             metrics[-1].append([])
             for param in paramsearch:
                 param.update({'cv_iter': i})
-                param.update({'tboard': {0:i,
-                                         1:k,
-                                         2:stringify(param)}})
+                # param.update({'tboard': {0:i,
+                                         # 1:k,
+                                         # 2:stringify(param)}})
 
                 if param not in paramset:
                     paramset.append(param)
 
-                X_train, X_val = X_training[train], X_training[val]
+                Xe_train, Xe_val = Xe_training[train], Xe_training[val]
+                Xd_train, Xd_val = Xd_training[train], Xd_training[val]
                 Yl_train, Yl_val = Yl_training[train], Yl_training[val]
                 Yt_train, Yt_val = Yt_training[train], Yt_training[val]
 
-                metric, model = train_model(X_train, X_val,
-                                            Yl_train, Yl_val,
-                                            Yt_train, Yt_val,
-                                            epochs, param, n_gpu)
+                model, history = train_model(Xe_train, Xe_val,
+                                             Xd_train, Xd_val,
+                                             Yl_train, Yl_val,
+                                             Yt_train, Yt_val,
+                                             epochs, param, n_gpu)
 
-                score_keys = list(OrderedDict(sorted(metric.items())).keys())
-                metrics[-1][-1].append(list(OrderedDict(sorted(metric.items())).values()))
+                score_keys = list(OrderedDict(sorted(history.items())).keys())
+                metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
 
         fn = 'cross_validation/{iter}'.format(iter=i)
         os.makedirs(fn, exist_ok=True)
@@ -235,15 +240,15 @@ def crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu):
     return metrics, metric_keys
 
 
-def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param,
+def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param,
                 n_gpu=0, model=None):
     params = {}
     params.update(fixed_param)
     params.update(param)
     print(params)
     adam = Adam()
-    metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
-    callbacks = [metric]
+    callbacks = []
+    # callbacks = [metric]
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
     if params.get('tboard'):
@@ -278,33 +283,34 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     if params['c_weights']:
         sample_weights = get_sample_weights(Ys)
 
-    model.fit(X_train,
-              Ys,
-              validation_data=(X_val, Ys_val),
-              callbacks=callbacks,
-              epochs=epochs,
-              batch_size=params['batch_size'],
-              verbose=0,
-              sample_weight=sample_weights)
+    history = model.fit([Xe_train, Xd_train],
+                        Ys,
+                        validation_data=([Xe_val, Xd_val], Ys_val),
+                        callbacks=callbacks,
+                        epochs=epochs,
+                        batch_size=params['batch_size'],
+                        verbose=0,
+                        sample_weight=sample_weights)
 
-    return metric.metrics, model
+    return model, history.history
 
 
-def main(docs, links, types=None, epochs=1000, paramsearch=paramsearch, n_gpu=None):
-    X, Yl, Yt, _, _, _ = preprocess(docs, links, types)
-    metrics = crossvalidation(X, Yl, Yt, epochs, paramsearch, n_gpu)
+def main(enc_input, dec_input, links, types=None, epochs=1000, paramsearch=paramsearch, n_gpu=None):
+    Xe, Xd, Yl, Yt, _, _, _, _ = preprocess(enc_input, dec_input, links, types)
+    metrics = crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu)
     return metrics
 
 
-def load_vec(docs, links, types=None):
-    docs, links = np.load(docs), np.load(links)
+def load_vec(enc_input, dec_input, links, types=None):
+    enc_input, dec_input, links = np.load(enc_input), np.load(dec_input), np.load(links)
     types = np.load(types) if types else None
-    return docs, links, types
+    return enc_input, dec_input, links, types
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--docs', help='Documents', type=str)
+    parser.add_argument('-ei', '--enc_input', help='Encoder Input', type=str)
+    parser.add_argument('-di', '--dec_input', help='Decoder Input', type=str)
     parser.add_argument('-l', '--links', help='Links', type=str)
     parser.add_argument('-t', '--types', help='Types', type=str, default=None)
     parser.add_argument('-i', '--ifold', help='Types', type=int, default=3)
@@ -312,7 +318,7 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--n_gpu', help='Multi GPU', type=int, default=None)
     args = parser.parse_args()
 
-    docs, links, types = load_vec(args.docs, args.links, args.types)
+    enc_input, dec_input, links, types = load_vec(args.enc_input, args.dec_input, args.links, args.types)
 
-    print(docs.shape, links.shape, args.epochs)
-    main(docs, links, types, args.epochs, paramsearch, args.n_gpu)
+    print(enc_input.shape, dec_input.shape, links.shape, args.epochs)
+    main(enc_input, dec_input, links, types, args.epochs, paramsearch, args.n_gpu)
