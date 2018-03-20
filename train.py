@@ -199,9 +199,9 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
             metrics[-1].append([])
             for param in paramsearch:
                 param.update({'cv_iter': i})
-                # param.update({'tboard': {0:i,
-                                         # 1:k,
-                                         # 2:stringify(param)}})
+                param.update({'tboard': {0:i,
+                                         1:k,
+                                         2:stringify(param)}})
 
                 if param not in paramset:
                     paramset.append(param)
