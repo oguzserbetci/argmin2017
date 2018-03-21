@@ -30,11 +30,6 @@ fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512
 paramsearch = [
     dict(recurrent_dropout=0.9, dropout=0),
     dict(recurrent_dropout=0.9, dropout=0, regularizer='l2'),
-    dict(recurrent_dropout=0.9, dropout=0, activity_regularizer='l1'),
-    dict(recurrent_dropout=0.9, dropout=0, drop_input=0.9),
-    dict(recurrent_dropout=0.9, dropout=0, drop_input=0.9, regularizer='l2'),
-    dict(recurrent_dropout=0.9, dropout=0, drop_fc=0.9),
-    dict(recurrent_dropout=0.9, dropout=0, drop_fc=0.9, regularizer='l2'),
 ]
 
 
@@ -223,8 +218,7 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     params.update(param)
     print(params)
     adam = Adam()
-    metric = utils.JointMetrics() if params['joint'] else utils.Metrics()
-    callbacks = [metric]
+    callbacks = []
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
     if params.get('tboard'):
