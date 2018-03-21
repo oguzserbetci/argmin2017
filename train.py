@@ -44,13 +44,11 @@ def create_model(seq_len=10, hidden_size=512,
     inp = Input(shape=(seq_len, 2640), name='input')
 
     mask = Masking(mask_value=0)(inp)
-    dropped = Dropout(drop_input)(mask)
-    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(dropped)
-    dropped = Dropout(drop_fc)(fc)
+    fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(masked)
 
     encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder',
                                  recurrent_dropout=recurrent_dropout,
-                                 dropout=dropout))(dropped)
+                                 dropout=dropout))(fc)
     decoder = LSTM(hidden_size, return_sequences=True, name='decoder', recurrent_dropout=recurrent_dropout, dropout=dropout)(encoder)
 
     if joint:
@@ -253,16 +251,16 @@ def train_model(X_train, X_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, para
     if params['c_weights']:
         sample_weights = get_sample_weights(Ys)
 
-    model.fit(X_train,
-              Ys,
-              validation_data=(X_val, Ys_val),
-              callbacks=callbacks,
-              epochs=epochs,
-              batch_size=params['batch_size'],
-              verbose=0,
-              sample_weight=sample_weights)
+    history = model.fit(X_train,
+			Ys,
+			validation_data=(X_val, Ys_val),
+			callbacks=callbacks,
+			epochs=epochs,
+			batch_size=params['batch_size'],
+			verbose=0,
+			sample_weight=sample_weights)
 
-    return metric.metrics, model
+    return history.history, model
 
 
 def main(docs, links, types=None, epochs=1000, paramsearch=paramsearch, n_gpu=None):
