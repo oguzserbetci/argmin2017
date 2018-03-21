@@ -43,7 +43,7 @@ def create_model(seq_len=10, hidden_size=512,
 
     inp = Input(shape=(seq_len, 2640), name='input')
 
-    mask = Masking(mask_value=0)(inp)
+    masked = Masking(mask_value=0)(inp)
     fc = TimeDistributed(Dense(hidden_size, activation='sigmoid', kernel_regularizer=regularizer), name='FC_input')(masked)
 
     encoder = Bidirectional(LSTM(hidden_size//2, return_sequences=True, name='encoder',
