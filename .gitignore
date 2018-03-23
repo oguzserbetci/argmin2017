@@ -5,6 +5,6 @@ __pycache__/
 checkpoints
 exported_*
 arg-microtexts/*
-cross_validation/*
+cross_validation*
 checkpoints/*
 logs
