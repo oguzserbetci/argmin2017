@@ -38,18 +38,4 @@ def preprocess(enc_input, dec_input, links, types, MAX_LEN):
     links_filtered = np.array([x for x in links if len(x) <= MAX_LEN])
     types_filtered = np.array([x for x in types if len(x) <= MAX_LEN])
 
-    # pad with zeros, truncate longer than 6
-    Xe = pad_sequences(enc_input_filtered, dtype=float, truncating='post',padding='post')
-    Xd = pad_sequences(dec_input_filtered, dtype=float, truncating='post',padding='post')
-
-    # convert links 1,1,2 -> [1,0,0]
-    #                        [1,0,0]
-    #                        [0,1,0]
-    Yl = [to_categorical([np.array(ys) for ys in y],
-                         num_classes=Xe.shape[1]) for y in links_filtered]
-    Yl = pad_sequences(Yl, dtype=int, truncating='post', padding='post')
-    Yt = [pad_sequences(to_categorical(np.array(y)), truncating='post',
-                        padding='post') for y in types_filtered]
-    Yt = pad_sequences(Yt, dtype=int, truncating='post', padding='post')
-
-    return Xe, Xd, Yl, Yt, enc_input_filtered, dec_input_filtered, links_filtered, types_filtered
+    return enc_input_filtered, dec_input_filtered, links_filtered, types_filtered
