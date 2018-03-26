@@ -27,10 +27,10 @@ fixed_param = dict(regularizer=None, hidden_size=512,
                    seq_len=MAX_LEN, batch_size=16, dropout=0.9, recurrent_dropout=0.9)
 
 paramsearch = [
-    dict(di=True, c_weights=True, joint=True, optimizer='Adam'),
-    dict(di=True, c_weights=False, joint=True, optimizer='Adam'),
-    dict(di=True, c_weights=True, joint=False, optimizer='Adam'),
-    dict(di=True, c_weights=False, joint=False, optimizer='Adam'),
+    dict(di=True, c_weights=True, joint=True),
+    dict(di=True, c_weights=False, joint=True),
+    dict(di=True, c_weights=True, joint=False),
+    dict(di=True, c_weights=False, joint=False),
 ]
 
 
@@ -95,7 +95,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
     NUM_TRIALS = 10
     metrics = []
     tests = defaultdict(list)
-    test_keys = ['macro', 'single0', 'single1']
+    test_keys = ['macro', 'macro_cat', 'weighted', 'single0', 'single1']
     metric_keys = ['outer', 'inner', 'param', 'score', 'epoch']
     paramset = []
     score_keys = []
@@ -165,11 +165,15 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
             test_results = []
             for Y_pred, Y_true, output in zip(Y_preds, Y_trues, outputs):
                 print(output.upper())
-                macro = utils.flat_f1(Y_true, Y_pred, average='macro')
+                macro = utils.f1(Y_true, Y_pred, average='macro')
+                macro_cat = utils.flat_f1(Y_true, Y_pred, average='macro')
+                weighted = utils.f1(Y_true, Y_pred, average='weighted')
                 singles = utils.flat_f1(Y_true, Y_pred, average=None)
                 print('macro:', macro)
+                print('macro_cat:', macro_cat)
+                print('weighted:', weighted)
                 print('categories:', singles)
-                test_results += [macro] + list(singles)
+                test_results += [macro, macro_cat, weighted] + list(singles)
 
             tests[stringify(param)].append(test_results)
 
