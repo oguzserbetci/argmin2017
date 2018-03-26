@@ -189,7 +189,6 @@ def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, 
     params.update(fixed_param)
     params.update(param)
     print(params)
-    adam = Adam()
     callbacks = []
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
@@ -209,7 +208,7 @@ def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, 
                              joint=params['joint'],
                              **params)
 
-        model.compile(optimizer=adam,
+        model.compile(optimizer=params.get('optimizer', 'adam'),
                       loss='categorical_crossentropy',
                       metrics=['categorical_accuracy', utils.f1_metric],
                       sample_weight_mode='temporal',
