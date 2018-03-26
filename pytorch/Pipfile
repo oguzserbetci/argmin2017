@@ -1,0 +1,23 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+"59d3f8a" = {file = "http://download.pytorch.org/whl/torch-0.3.1-cp36-cp36m-macosx_10_7_x86_64.whl"}
+torchvision = ""
+tqdm = "*"
+
+
+
+[dev-packages]
+spacy = ">2"
+en_core_web_lg = { file = 'https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-2.0.0/en_core_web_lg-2.0.0.tar.gz' }
+
+
+
+[requires]
+
+python_version = "3.6"
