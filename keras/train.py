@@ -1,7 +1,6 @@
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
-from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
 
 import utils
@@ -14,27 +13,29 @@ from tqdm import tqdm
 from collections import OrderedDict
 import pickle
 import argparse
+from collections import defaultdict
 
 import numpy as np
+
 np.set_printoptions(precision=3, linewidth=1000, edgeitems=100, suppress=True)
 seed = 7
 np.random.seed(seed)
 
-MAX_LEN = 7
+MAX_LEN = 10
 REPR_SIZE = 2927
 fixed_param = dict(regularizer=None, hidden_size=512,
                    seq_len=MAX_LEN, batch_size=16, dropout=0.9, recurrent_dropout=0.9)
 
 paramsearch = [
-    dict(di=True, c_weights=True, joint=True, optimizer='RMSprop'),
     dict(di=True, c_weights=True, joint=True, optimizer='Adam'),
-    dict(di=True, c_weights=False, joint=False, optimizer='RMSprop'),
+    dict(di=True, c_weights=False, joint=True, optimizer='Adam'),
+    dict(di=True, c_weights=True, joint=False, optimizer='Adam'),
     dict(di=True, c_weights=False, joint=False, optimizer='Adam'),
 ]
 
 
 def stringify(param):
-    return '-'.join(['{}_{}'.format(k,v) for k, v in param.items() if k != 'tboard'])
+    return '-'.join(sorted(['{}_{}'.format(k,v) for k, v in param.items() if k != 'tboard']))
 
 
 def get_sample_weights(Ys):
@@ -93,11 +94,13 @@ def preprocess(enc_input, dec_input, links, types=None):
 def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
     NUM_TRIALS = 10
     metrics = []
+    tests = defaultdict(list)
+    test_keys = ['macro', 'single0', 'single1']
     metric_keys = ['outer', 'inner', 'param', 'score', 'epoch']
     paramset = []
     score_keys = []
 
-    inner_seed = np.random.RandomState(0)
+    # inner_seed = np.random.RandomState(0)
     outer = KFold(n_splits=NUM_TRIALS, shuffle=True, random_state=1)
     training_idx = []
     test_idx = []
@@ -105,7 +108,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
     for (i, (training, test)) in tqdm(enumerate(outer.split(Xe)), desc='outer'):
         training_idx.append(training)
         test_idx.append(test)
-        inner = KFold(n_splits=5, shuffle=True, random_state=inner_seed)
+        # inner = KFold(n_splits=5, shuffle=True, random_state=inner_seed)
 
         metrics.append([])
 
@@ -131,51 +134,59 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
                 # if param not in paramset:
                     # paramset.append(param)
 
-                # Xe_train, Xe_val = Xe_training[train], Xe_training[val]
-                # Xd_train, Xd_val = Xd_training[train], Xd_training[val]
-                # Yl_train, Yl_val = Yl_training[train], Yl_training[val]
-                # Yt_train, Yt_val = Yt_training[train], Yt_training[val]
+                # inputs = [Xe_training[train], Xd_training[train]]
+                # targets = [Yl_training[train], Yt_training[train]] if param['joint'] else [Yl_training[train]]
+                # if param['joint']:
+                    # validation = ([Xe_training[val], Xd_training[val]], [Yl_training[val], Yt_training[val]])
+                # else:
+                    # validation = ([Xe_training[val], Xd_training[val]], Yl_training[val])
 
                 # # TRAIN & VALIDATE
-                # model, history = train_model(Xe_train, Xe_val,
-                                             # Xd_train, Xd_val,
-                                             # Yl_train, Yl_val,
-                                             # Yt_train, Yt_val,
-                                             # epochs, param, n_gpu)
+                # model, history = train_model(inputs, targets, validation, epochs, param, n_gpu)
 
                 # score_keys = list(OrderedDict(sorted(history.items())).keys())
                 # metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
 
         # TEST
-        for param in paramsearch:
-            model, _ = train_model(Xe_training, None,
-                                   Xd_training, None,
-                                   Yl_training, None,
-                                   Yt_training, None,
-                                   epochs, param, n_gpu)
+        for param in tqdm(paramsearch, desc='params'):
+            inputs = [Xe_training, Xd_training]
+            targets = [Yl_training, Yt_training] if param['joint'] else [Yl_training]
+            model, history = train_model(inputs, targets, validation=None,
+                                         epochs=epochs, param=param, n_gpu=n_gpu)
+            model.save('../cross_validation/{}_{}.h5'.format(stringify(param), i))
+            score_keys = list(OrderedDict(sorted(history.items())).keys())
+            metrics[-1].append(list(OrderedDict(sorted(history.items())).values()))
 
             Y_preds = model.predict([Xe_test, Xd_test])
             Y_preds = [Y_preds] if not isinstance(Y_preds, list) else Y_preds
             Y_trues = [Yl_test, Yt_test] if param['joint'] else [Yl_test]
             outputs = ['links', 'types'] if param['joint'] else ['links']
+
+            test_results = []
             for Y_pred, Y_true, output in zip(Y_preds, Y_trues, outputs):
                 print(output.upper())
-                print('macro:', utils.flat_f1(Y_true, Y_pred, average='macro'))
-                print('categories:', utils.flat_f1(Y_true, Y_pred, average=None))
+                macro = utils.flat_f1(Y_true, Y_pred, average='macro')
+                singles = utils.flat_f1(Y_true, Y_pred, average=None)
+                print('macro:', macro)
+                print('categories:', singles)
+                test_results += [macro] + list(singles)
+
+            tests[stringify(param)].append(test_results)
 
         fn = 'cross_validation/{iter}'.format(iter=i)
         os.makedirs(fn, exist_ok=True)
         with open(fn+'/train.pl', 'wb') as f:
             training_data = dict(metrics=metrics, metric_keys=metric_keys,
                                  score_keys=score_keys, params=paramset,
-                                 training_idx=training, test_idx=test)
+                                 training_idx=training, test_idx=test,
+                                 tests=tests, test_keys=test_keys)
             pickle.dump(training_data, f)
-        break
 
     with open('cross_validation/train.pl', 'wb') as f:
         training_data = dict(metrics=metrics, metric_keys=metric_keys,
                              score_keys=score_keys, params=paramset,
-                             training_idx=training_idx, test_idx=test_idx)
+                             training_idx=training_idx, test_idx=test_idx,
+                             tests=tests, test_keys=test_keys)
         pickle.dump(training_data, f)
 
     print(metric_keys)
@@ -183,8 +194,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
     return metrics, metric_keys
 
 
-def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, Yt_val, epochs, param,
-                n_gpu=0, model=None):
+def train_model(inputs, targets, validation, epochs, param, n_gpu=0, model=None):
     params = {}
     params.update(fixed_param)
     params.update(param)
@@ -192,45 +202,36 @@ def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, 
     callbacks = []
     # earlystopping = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=50)
     # checkpoint = ModelCheckpoint('checkpoints/' + stringify(params), monitor='val_loss', save_best_only=True)
+
     if params.get('tboard'):
         tboard_desc = params['tboard']
         tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
-        tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run,
+        tensorboard = TensorBoard(log_dir='logs/dev/'+tboard_run,
                                   write_graph=False)
         callbacks.append(tensorboard)
 
-    loss_weight = [0.5, 0.5] if params['joint'] else None
+    loss_weights = [0.5, 0.5] if params['joint'] else None
 
     if model is None:
-        model = create_model(seq_len=params['seq_len'],
-                             hidden_size=params['hidden_size'],
-                             n_gpu=n_gpu,
-                             joint=params['joint'],
-                             **params)
+        model = create_model(**params)
 
         model.compile(optimizer=params.get('optimizer', 'adam'),
                       loss='categorical_crossentropy',
                       metrics=['categorical_accuracy', utils.f1_metric],
                       sample_weight_mode='temporal',
-                      loss_weights=loss_weight)
+                      loss_weights=loss_weights)
 
-    Ys = [Yl_train, Yt_train] if params['joint'] else [Yl_train]
-    Ys_val = [Yl_val, Yt_val] if params['joint'] else [Yl_val]
     sample_weights = None
     if params['c_weights']:
-        sample_weights = get_sample_weights(Ys)
+        sample_weights = get_sample_weights(targets)
 
-    validation_data = None
-    if Xe_val is not None:
-        validation_data = ([Xe_val, Xd_val], Ys_val),
-
-    history = model.fit([Xe_train, Xd_train],
-                        Ys,
-                        validation_data=validation_data,
+    history = model.fit(inputs,
+                        targets,
+                        validation_data=validation,
                         callbacks=callbacks,
                         epochs=epochs,
                         batch_size=params['batch_size'],
-                        verbose=2,
+                        verbose=0,
                         sample_weight=sample_weights)
 
     return model, history.history
