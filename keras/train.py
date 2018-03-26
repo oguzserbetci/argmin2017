@@ -190,7 +190,7 @@ def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, 
 
         model.compile(optimizer=adam,
                       loss='categorical_crossentropy',
-                      metrics=['categorical_accuracy', utils.f1],
+                      metrics=['categorical_accuracy', utils.f1_metric],
                       sample_weight_mode='temporal',
                       loss_weights=loss_weight)
 

@@ -33,10 +33,22 @@ class JointMetrics(Callback):
             self.metrics[k].append(v)
 
 
-def flat_f1(y_true, y_pred, **kwargs):
+def f1(y_true, y_pred, **kwargs):
     mask_ind = _mask(y_true)
     y_pred = y_pred.argmax(2).flatten()[mask_ind]
     y_true = y_true.argmax(2).flatten()[mask_ind]
+    return f1_score(y_true, y_pred, **kwargs)
+
+
+def flat_f1(y_true, y_pred, **kwargs):
+    n_labels = y_true.shape[-1]
+
+    mask_ind = _mask(y_true)
+    y_true = np.concatenate(y_true, 0)[mask_ind].flatten()
+
+    y_pred = np.concatenate(y_pred, 0)
+    y_pred = y_pred[mask_ind].argmax(-1).flatten()
+    y_pred = np.eye(n_labels)[y_pred].flatten()
     return f1_score(y_true, y_pred, **kwargs)
 
 
@@ -44,7 +56,7 @@ def _mask(y_true):
     return y_true.any(2).flatten()
 
 
-def f1(y_true, y_pred):
+def f1_metric(y_true, y_pred):
     def recall(y_true, y_pred):
         """Recall metric.
 
