@@ -37,7 +37,7 @@ def f1(y_true, y_pred, **kwargs):
     mask_ind = _mask(y_true)
     y_pred = y_pred.argmax(2).flatten()[mask_ind]
     y_true = y_true.argmax(2).flatten()[mask_ind]
-    return f1_score(y_true, y_pred, **kwargs)
+    return f1_score(y_true, y_pred, **kwargs, pos_label=None)
 
 
 def flat_f1(y_true, y_pred, **kwargs):
@@ -49,7 +49,7 @@ def flat_f1(y_true, y_pred, **kwargs):
     y_pred = np.concatenate(y_pred, 0)
     y_pred = y_pred[mask_ind].argmax(-1).flatten()
     y_pred = np.eye(n_labels)[y_pred].flatten()
-    return f1_score(y_true, y_pred, **kwargs)
+    return f1_score(y_true, y_pred, **kwargs, pos_label=None)
 
 
 def _mask(y_true):
