@@ -177,7 +177,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
 
             tests[stringify(param)].append(test_results)
 
-        fn = 'cross_validation/{iter}'.format(iter=i)
+        fn = '../cross_validation/{iter}'.format(iter=i)
         os.makedirs(fn, exist_ok=True)
         with open(fn+'/train.pl', 'wb') as f:
             training_data = dict(metrics=metrics, metric_keys=metric_keys,
@@ -186,7 +186,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
                                  tests=tests, test_keys=test_keys)
             pickle.dump(training_data, f)
 
-    with open('cross_validation/train.pl', 'wb') as f:
+    with open('../cross_validation/train.pl', 'wb') as f:
         training_data = dict(metrics=metrics, metric_keys=metric_keys,
                              score_keys=score_keys, params=paramset,
                              training_idx=training_idx, test_idx=test_idx,
@@ -210,7 +210,7 @@ def train_model(inputs, targets, validation, epochs, param, n_gpu=0, model=None)
     if params.get('tboard'):
         tboard_desc = params['tboard']
         tboard_run = '/'.join([str(v) for k, v in sorted(tboard_desc.items())])
-        tensorboard = TensorBoard(log_dir='logs/dev/'+tboard_run,
+        tensorboard = TensorBoard(log_dir='/cache/tensorboard-logdir/'+tboard_run,
                                   write_graph=False)
         callbacks.append(tensorboard)
 
