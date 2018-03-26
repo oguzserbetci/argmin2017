@@ -4,7 +4,7 @@ __pycache__/
 *.pyc
 checkpoints
 exported_*
-arg-microtexts/*
+arg-microtexts*
 cross_validation/*
 checkpoints/*
 logs
