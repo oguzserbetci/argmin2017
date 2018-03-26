@@ -165,9 +165,9 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
             test_results = []
             for Y_pred, Y_true, output in zip(Y_preds, Y_trues, outputs):
                 print(output.upper())
-                macro = utils.f1(Y_true, Y_pred, average='macro')
-                macro_cat = utils.flat_f1(Y_true, Y_pred, average='macro')
-                weighted = utils.f1(Y_true, Y_pred, average='weighted')
+                macro = utils.flat_f1(Y_true, Y_pred, average='macro')
+                macro_cat = utils.f1(Y_true, Y_pred, average='macro')
+                weighted = utils.flat_f1(Y_true, Y_pred, average='weighted')
                 singles = utils.flat_f1(Y_true, Y_pred, average=None)
                 print('macro:', macro)
                 print('macro_cat:', macro_cat)
