@@ -1,25 +1,22 @@
 from torch import from_numpy
 from torch.utils.data import Dataset
 import numpy as np
-from keras.utils import to_categorical
-from keras.preprocessing.sequence import pad_sequences
 
 
 class MTCDataset(Dataset):
     def __init__(self, enc_input, dec_input, links, types, maxlen=7):
         enc_input, dec_input, links, types = load_vec(enc_input, dec_input, links, types)
-        self.Xe, self.Xd, self.Yl, self.Yt, _, _, _, _ = preprocess(enc_input, dec_input, links, types,
-                                                                    maxlen)
+        self.Xe, self.Xd, self.Yl, self.Yt = preprocess(enc_input, dec_input, links, types, maxlen)
         self.maxlen = maxlen
 
     def __len__(self):
         return len(self.Xe)
 
     def __getitem__(self, idx):
-        encoder_inputs = from_numpy(self.Xe[idx]).float()
-        decoder_inputs = from_numpy(self.Xd[idx]).float()
-        links = from_numpy(self.Yl[idx]).long()
-        types = from_numpy(self.Yt[idx]).long()
+        encoder_inputs = from_numpy(np.array(self.Xe[idx])).float()
+        decoder_inputs = from_numpy(np.array(self.Xd[idx])).float()
+        links = from_numpy(np.array(self.Yl[idx])).long()
+        types = from_numpy(np.array(self.Yt[idx])).long()
 
         sample = {'Encoder':encoder_inputs, 'Decoder':decoder_inputs, 'Links': links, 'Types':types}
 
