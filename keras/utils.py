@@ -25,19 +25,19 @@ class JointMetrics(Callback):
 
     def on_epoch_end(self, batch, logs={}):
         predict = self.model.predict(self.validation_data[0])
-        val_link_f1 = _flat_f1(self.validation_data[1], predict[0])
-        val_type_f1 = _flat_f1(self.validation_data[2], predict[1])
+        val_link_f1 = flat_f1(self.validation_data[1], predict[0], average='macro')
+        val_type_f1 = flat_f1(self.validation_data[2], predict[1], average='macro')
         self.metrics['val_link_macro_f1'].append(val_link_f1)
         self.metrics['val_type_macro_f1'].append(val_type_f1)
         for k, v in logs.items():
             self.metrics[k].append(v)
 
 
-def _flat_f1(y_true, y_pred):
+def flat_f1(y_true, y_pred, **kwargs):
     mask_ind = _mask(y_true)
     y_pred = y_pred.argmax(2).flatten()[mask_ind]
     y_true = y_true.argmax(2).flatten()[mask_ind]
-    return f1_score(y_true, y_pred, average='macro')
+    return f1_score(y_true, y_pred, **kwargs)
 
 
 def _mask(y_true):
