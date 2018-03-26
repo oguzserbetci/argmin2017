@@ -282,16 +282,16 @@ def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, 
     if params['c_weights']:
         sample_weights = get_sample_weights(Ys)
 
-    history = model.fit(X_train,
-			Ys,
-			validation_data=(X_val, Ys_val),
-			callbacks=callbacks,
-			epochs=epochs,
-			batch_size=params['batch_size'],
-			verbose=0,
-			sample_weight=sample_weights)
+    history = model.fit([Xe_train, Xd_train],
+                        Ys,
+                        validation_data=([Xe_val, Xd_val], Ys_val),
+                        callbacks=callbacks,
+                        epochs=epochs,
+                        batch_size=params['batch_size'],
+                        verbose=0,
+                        sample_weight=sample_weights)
 
-    return history.history, model
+    return model, history.history
 
 
 def main(enc_input, dec_input, links, types=None, epochs=1000, paramsearch=paramsearch, n_gpu=None):
