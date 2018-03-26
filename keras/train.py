@@ -22,12 +22,14 @@ np.random.seed(seed)
 
 MAX_LEN = 7
 REPR_SIZE = 2927
-fixed_param = dict(c_weights=True, joint=True, regularizer=None, hidden_size=512,
-                   seq_len=MAX_LEN, batch_size=16)
+fixed_param = dict(regularizer=None, hidden_size=512,
+                   seq_len=MAX_LEN, batch_size=16, dropout=0.9, recurrent_dropout=0.9)
 
 paramsearch = [
-    dict(di=True, dropout=0.9, recurrent_dropout=0.9, regularizer='l2'),
-    dict(di=True, dropout=0.9, recurrent_dropout=0.9),
+    dict(di=True, c_weights=True, joint=True, optimizer='RMSprop'),
+    dict(di=True, c_weights=True, joint=True, optimizer='Adam'),
+    dict(di=True, c_weights=False, joint=False, optimizer='RMSprop'),
+    dict(di=True, c_weights=False, joint=False, optimizer='Adam'),
 ]
 
 
@@ -112,31 +114,54 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
         Yl_training = Yl[training]
         Yt_training = Yt[training]
 
-        for (k, (train, val)) in tqdm(enumerate(inner.split(Xe_training)), desc='inner'):
-            print('data lengths', len(train),len(val),len(test))
-            metrics[-1].append([])
-            for param in paramsearch:
-                param.update({'cv_iter': i})
-                param.update({'tboard': {0:i,
-                                         1:k,
-                                         2:stringify(param)}})
+        Xe_test = Xe[test]
+        Xd_test = Xd[test]
+        Yl_test = Yl[test]
+        Yt_test = Yt[test]
 
-                if param not in paramset:
-                    paramset.append(param)
+        # for (k, (train, val)) in tqdm(enumerate(inner.split(Xe_training)), desc='inner'):
+            # print('data lengths', len(train),len(val),len(test))
+            # metrics[-1].append([])
+            # for param in paramsearch:
+                # param.update({'cv_iter': i})
+                # param.update({'tboard': {0:i,
+                                         # 1:k,
+                                         # 2:stringify(param)}})
 
-                Xe_train, Xe_val = Xe_training[train], Xe_training[val]
-                Xd_train, Xd_val = Xd_training[train], Xd_training[val]
-                Yl_train, Yl_val = Yl_training[train], Yl_training[val]
-                Yt_train, Yt_val = Yt_training[train], Yt_training[val]
+                # if param not in paramset:
+                    # paramset.append(param)
 
-                model, history = train_model(Xe_train, Xe_val,
-                                             Xd_train, Xd_val,
-                                             Yl_train, Yl_val,
-                                             Yt_train, Yt_val,
-                                             epochs, param, n_gpu)
+                # Xe_train, Xe_val = Xe_training[train], Xe_training[val]
+                # Xd_train, Xd_val = Xd_training[train], Xd_training[val]
+                # Yl_train, Yl_val = Yl_training[train], Yl_training[val]
+                # Yt_train, Yt_val = Yt_training[train], Yt_training[val]
 
-                score_keys = list(OrderedDict(sorted(history.items())).keys())
-                metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
+                # # TRAIN & VALIDATE
+                # model, history = train_model(Xe_train, Xe_val,
+                                             # Xd_train, Xd_val,
+                                             # Yl_train, Yl_val,
+                                             # Yt_train, Yt_val,
+                                             # epochs, param, n_gpu)
+
+                # score_keys = list(OrderedDict(sorted(history.items())).keys())
+                # metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
+
+        # TEST
+        for param in paramsearch:
+            model, _ = train_model(Xe_training, None,
+                                   Xd_training, None,
+                                   Yl_training, None,
+                                   Yt_training, None,
+                                   epochs, param, n_gpu)
+
+            Y_preds = model.predict([Xe_test, Xd_test])
+            Y_preds = [Y_preds] if not isinstance(Y_preds, list) else Y_preds
+            Y_trues = [Yl_test, Yt_test] if param['joint'] else [Yl_test]
+            outputs = ['links', 'types'] if param['joint'] else ['links']
+            for Y_pred, Y_true, output in zip(Y_preds, Y_trues, outputs):
+                print(output.upper())
+                print('macro:', utils.flat_f1(Y_true, Y_pred, average='macro'))
+                print('categories:', utils.flat_f1(Y_true, Y_pred, average=None))
 
         fn = 'cross_validation/{iter}'.format(iter=i)
         os.makedirs(fn, exist_ok=True)
@@ -200,13 +225,17 @@ def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, 
     if params['c_weights']:
         sample_weights = get_sample_weights(Ys)
 
+    validation_data = None
+    if Xe_val is not None:
+        validation_data = ([Xe_val, Xd_val], Ys_val),
+
     history = model.fit([Xe_train, Xd_train],
                         Ys,
-                        validation_data=([Xe_val, Xd_val], Ys_val),
+                        validation_data=validation_data,
                         callbacks=callbacks,
                         epochs=epochs,
                         batch_size=params['batch_size'],
-                        verbose=0,
+                        verbose=2,
                         sample_weight=sample_weights)
 
     return model, history.history
