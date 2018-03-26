@@ -205,13 +205,9 @@ def train_model(Xe_train, Xe_val, Xd_train, Xd_val, Yl_train, Yl_val, Yt_train, 
     if model is None:
         model = create_model(seq_len=params['seq_len'],
                              hidden_size=params['hidden_size'],
-                             dropout=params['dropout'],
-                             recurrent_dropout=params['recurrent_dropout'],
-                             regularizer=params['regularizer'], joint=params['joint'],
                              n_gpu=n_gpu,
-                             drop_input=params.get('drop_input', 0),
-                             activity_regularizer=params.get('activity_regularizer'),
-                             drop_fc=params.get('drop_fc', 0))
+                             joint=params['joint'],
+                             **params)
 
         model.compile(optimizer=adam,
                       loss='categorical_crossentropy',
