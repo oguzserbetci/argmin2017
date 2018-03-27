@@ -12,4 +12,9 @@ Peter Potash, Alexey Romanov, and Anna Rumshisky.
 \newblock In {\em Proceedings of the 2017 Conference on Empirical Methods in
   Natural Language Processing}, pages 1364--1373, 2017.
 
+\bibitem{DBLP:journals/corr/Ruder17a}
+Sebastian Ruder.
+\newblock An overview of multi-task learning in deep neural networks.
+\newblock {\em CoRR}, abs/1706.05098, 2017.
+
 \end{thebibliography}
