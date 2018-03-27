@@ -25,8 +25,8 @@ class Encoder(nn.Module):
         state_c = torch.Tensor(1, 1, self.hidden_size)
         state_h = nn.init.xavier_uniform(state_h, gain=nn.init.calculate_gain('relu'))
         state_c = nn.init.xavier_uniform(state_c, gain=nn.init.calculate_gain('relu'))
-        state_h = Variable(state_h, require_grad=False)
-        state_c = Variable(state_c, require_grad=False)
+        state_h = Variable(state_h)
+        state_c = Variable(state_c)
         return state_h, state_c
 
 
@@ -52,8 +52,8 @@ class Decoder(nn.Module):
         state_c = torch.Tensor(1, 1, self.hidden_states)
         state_h = nn.init.xavier_uniform(state_h, gain=nn.init.calculate_gain('relu'))
         state_c = nn.init.xavier_uniform(state_c, gain=nn.init.calculate_gain('relu'))
-        state_h = Variable(state_h, require_grad=False)
-        state_c = Variable(state_c, require_grad=False)
+        state_h = Variable(state_h)
+        state_c = Variable(state_c)
         return state_h, state_c
 
 
@@ -126,7 +126,7 @@ class PointerNetwork(nn.Module):
         seq_length = encoder_inputs.size()[1]
         # # # print('e', encoder_inputs.size())
         # encoder_outputs = []
-        encoder_outputs = Variable(torch.zeros(1, seq_length, self.hidden_size), require_grad=False)
+        encoder_outputs = Variable(torch.zeros(1, seq_length, self.hidden_size))
         for ei in range(seq_length):
             # (batch, seq_len, hidden)
             encoder_input = encoder_inputs[:,[ei]]
@@ -142,7 +142,7 @@ class PointerNetwork(nn.Module):
         decoder_states = encoder_states
         print('ds', decoder_states[0].size())
 
-        decoder_outputs = Variable(torch.zeros(1, seq_length, self.hidden_size), require_grad=False)
+        decoder_outputs = Variable(torch.zeros(1, seq_length, self.hidden_size))
 
         use_teacher_forcing = True
         outputs = []

@@ -27,9 +27,7 @@ BATCH_SIZE = 1
 def train(dataloader, n_epochs, print_every=1000, plot_every=100, **params):
     model = PointerNetwork(**params)
     criterion = nn.NLLLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.2)
-    print([str(p) for p in list(model.parameters())])
-    return
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
 
     losses = []
 
@@ -38,8 +36,6 @@ def train(dataloader, n_epochs, print_every=1000, plot_every=100, **params):
         iterator = tqdm(dataloader, unit='Batch')
 
         for i_batch, sample_batched in enumerate(iterator):
-            optimizer.zero_grad()
-
             encoder_batch = Variable(sample_batched['Encoder'])
             decoder_batch = Variable(sample_batched['Decoder'])
             links_batch = Variable(sample_batched['Links']).squeeze()
@@ -51,6 +47,7 @@ def train(dataloader, n_epochs, print_every=1000, plot_every=100, **params):
             output_batch = torch.max(torch.cat(outputs, 0), -1)[1]
             print(output_batch, links_batch)
 
+            optimizer.zero_grad()
             loss = 0
             for i, output in enumerate(outputs):
                 loss += criterion(output, links_batch[i])
@@ -74,5 +71,4 @@ if __name__ == "__main__":
                             batch_size=BATCH_SIZE,
                             num_workers=4)
 
-    train(dataloader, n_epochs=4000, embedding_size=2927, hidden_size=56, max_length=7,
-          dropout=0)
+    train(dataloader, n_epochs=4000, embedding_size=2927, hidden_size=56, max_length=7, dropout=0)
