@@ -26,17 +26,18 @@
 
 \begin{abstract}
 
-Structure prediction on ``microtext'' corpus. We used Keras Functional API throughout the project. The code can be found on GitHub at \url{https://github.com/oguzserbetci/argmin2017}.
+Structure prediction on ``microtext'' corpus. We used the functional Keras API throughout the project. The code can be found on GitHub at \url{https://github.com/oguzserbetci/argmin2017}.
 
 \end{abstract}
 
 
 \section{Task \& Data}
-Argument mining is the field of study that deals with parsing the structure of the arguments in discourse, such that it eases the successive analysis.
+Argument mining is the field of study that deals with parsing the structure of the arguments in discourse. The resulting structure helps with the successive analysis and NLP tasks.
 
 In this project our goal was to predict argumentative structures in the
 Argumentative microtext corpus~\cite{peldszus2015annotated}, which contains 112 short argumentative texts
-(originally in German and professionally translated to English). Later we received preliminary annotations of the new microtexts
+(originally in German and professionally translated to English).
+We also received preliminary annotations of the new microtexts
 and could incorporate them into the project.
 
 \begin{figure}[h]
@@ -47,25 +48,25 @@ and could incorporate them into the project.
             The arcs connecting the nodes represent different supporting and attacking moves.}\label{fig:microtext}
 \end{figure}
 
-As seen in the figure~\ref{fig:microtext}, each text in the corpus is a single tree made up of argument components (ACs), of which one is the claim and the rest premises.
+As seen in the figure~\ref{fig:microtext}, each text in the corpus is a single tree made up of argument components (ACs), of which one is the claim and the rest are premises.
 We decided to concentrate on two tasks: classifying the type of an AC (claim or premise), and determining the links between ACs.
 
 \section{Approach}
 \subsection{Inspiration}
 Having found the paper ``Here's My Point: Joint Pointer Architecture for Argument Mining'' by Potash et al.~\cite{potash2017here}, we agreed that it
-would be good to try and reproduce the architecture and results from this paper, especially because the authors claimed they achieved
-state-of-the-art results. The authors use a Pointer Network which is a modification of seq2seq (sequence-to-sequence) architecture with attention.
+would be good to try and reproduce the architecture and the results from this paper, especially because the authors claimed they achieved
+state-of-the-art results. The authors use a Pointer Network~\cite{pn} which is a modification of seq2seq (sequence-to-sequence) architecture~\cite{seq2seq} with attention~\cite{attention}.
 
-The pointer network architecture is extended in two ways.
-First, to account for the large and sparse AC representations authors add fully-connected layers before the encoder and decoder LSTM inputs.
-Second, to improve performance they add an auxiliary task for predicting if an AC is the claim or a premise.
-Multi-task learning in deep neural networks has been shown to perform better in comparison to single task~\cite{multi}, which this work further demonstrates.
+In \cite{potash2017here}, the pointer network architecture is extended in two ways.
+First, to account for the large and sparse AC representations, fully-connected layers are added before the encoder and decoder LSTM inputs.
+Second, to improve performance an auxiliary task is added. The task is to predict whether an AC is the claim or a premise.
+Multi-task learning in deep neural networks has been shown to perform better in comparison to single task~\cite{multi}, which the results of this work further demonstrates.
 
 \subsection{Architecture}
 The architecture is a seq2seq model as depicted in~\autoref{fig:seq2seq}.
 For brevity let us leave out the fully connected layers before the inputs of the encoder and the decoder.
 At each time step, an AC is input into the encoder which results in hidden state $e_i$.
-Each $e_i$ is used to predict the type $T_i$ of the $\text{AC}_i$.
+Each $e_i$ is used to predict the probability distribution over types of the $\text{AC}_i$.
 
 \begin{align*}
     z_i = W_{\text{cls}} e_i + b_{\text{cls}}\\
@@ -75,67 +76,70 @@ Each $e_i$ is used to predict the type $T_i$ of the $\text{AC}_i$.
 
 After the final AC has been input into the encoder, the decoder has its first time step.
 The first input to the decoder is always the special start token and results with the hidden state $d_1$.
-At each decoder time step the modified attention mechanism predicts a link $D_i$ as follows:
+At each decoder time step the modified attention mechanism outputs the probability distribution over links as follows:
 \begin{align*}
     u_j^i &= v^\top \tanh(W_1e_j + W_2d_i)\\
     p(D_i|D_1,\dots,D_{j-1},E) &= \text{softmax}(u^i).
 \end{align*}
 
-Predictions are depicted in~\autoref{fig:type} and~\ref{fig:link}.
+The model for the type and link predictions are depicted in~\autoref{fig:type} and~\ref{fig:link}.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.95\linewidth]{fig/seq2seq.png}
-    \caption{Architecture of seq2seq model from the paper.}\label{fig:seq2seq}
+    \includegraphics[width=0.8\linewidth]{fig/seq2seq.png}
+    \includegraphics[width=0.18\linewidth]{fig/acs.png}
+    \caption{Seq2seq architecture of Pointer Network on the left and the predicted argument structure with 4 ACs on the right.}\label{fig:seq2seq}
 \end{figure}
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.8\linewidth]{fig/type.png}
-    \caption{Diagram of the model for predicting type of an $\text{AC}_1$.}\label{fig:type}
+    \caption{Diagram of the model for predicting type of $\text{AC}_1$. FC3 is a single fully connected layer that is being applied to each AC to predict the type.}\label{fig:type}
 \end{figure}
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.8\linewidth]{fig/link.png}
-    \caption{Diagram of the model for predicting the outgoing link from the $\text{AC}_1$.}\label{fig:link}
+    \caption{Diagram of the model for predicting the outgoing link from $\text{AC}_1$. Thick edges represent a dot product with a parameter matrix.}\label{fig:link}
 \end{figure}
 
 \subsection{Organisation}
-We have set milestones to enforce deadlines.
-In milestone 1, we have implemented the data preprocessing and creating simple bag-of-words vector representations of argument components.
+We have organized the project into 3 milestones and enforces deadlines.
+In milestone 1, we have implemented the data preprocessing and created simple bag-of-words vector representations of argument components.
 After that we implemented a pointer network with one-directional encoder for the single task (determining the links between ACs) without the fully connected layer at inputs.
-We sticked to using dropout, as it was applied in the paper~\cite{potash2017here}.
-However, because the paper didn't specify where the dropout should be used, we have to 
+We sticked to using $0.9$ dropout, as it was specified in~\cite{potash2017here}.
+However, because the paper didn't specify where the dropout should be used, we had to do a hyper-parameter search.
 
 In milestone 2, we extended the architecture with the fully-connected inputs and the bidirectional LSTM for the encoder.
-Moreover, we have added all applicable features to AC representation from the paper: structural feature
-(binary, is the AC the first one in text or not), bag-of-words over the whole data and embedding representations (average, min and max pooling
+Moreover, we have added all applicable features to AC representation from the paper: The structural feature
+(binary, is the AC the first one in text or not), the bag-of-words representation and the embedding representations (average, min and max pooling
 of word vectors\footnote{We have used \href{https://github.com/explosion/spacy-models/releases/tag/en_vectors_web_lg-2.0.0}{spacy} word vectors.} of tokens).
 
-In milestone 3, we moved further on implementing the joint model architecture with an additional task of classifying the type of AC (claim or premise).
+In milestone 3, we have implemented the joint model architecture with the auxiliary task of classifying the type of AC (claim or premise).
 
-During development, we have used 5-fold cross-validation for evaluation and inspection of our implementation.
+During development, we have used 5-fold cross-validation to evaluate different configurations and inspect our implementation.
 Some things we had to try out was using regularization, where to apply dropout and the seq2seq architecture.
 The regularization did not improve performance when applied as an addition to dropout.
-Strictly using l2 regularization also performed worse compared to dropout.
-We found that dropout should be strictly applied to LSTMs and nowhere else.
+Only using l2 regularization instead of dropout also performed worse compared to dropout.
+We found that dropout works best when applied to LSTM's cell state and input and nowhere else.
 
 \subsection{Challenges}
 While working on the project, we encountered some difficulties and made some errors that we then corrected. The first one
 was to think of the proper way to pad input sequences so that they have the same length.
 
+Our biggest mistake was to implement the seq2seq architecture wrong at first. We didn't have decoder inputs and the encoder and decoder were stacked on top of each other. Surprisingly this did not effect the performance much.
+
 Another mistake we did was to calculate the evaluation metrics wrong.
-We have calculated the f1 score not as a binary classification of absence and presence of links, instead a categorical one.
-This has resulted in significantly worse results which led us to tinker with our architecture and even implement it in pytorch from scratch.
+We have calculated the f1 score not as a binary classification of absence and presence of links, instead as a categorical one.
+This has resulted in significantly worse results which led us to tinker with our architecture and identify the wrong seq2seq architecture. We have even implemented the architecture in pytorch from scratch.
 
 This mistake and its correction has been a great learning for us, however, we note that the binary measure makes the results look much better than they are,
-since by definition for $n$ ACs the network gets $n-2$ absence of links for correct.
+since by definition in the worst case for $n$ ACs the network gets $n-2$ absence of links correct. Therefore, taking the macro average of the binary f1 score is misleading. We think the result that most telling is the f1 score for the prediction of the presence of links.
 
 \section{Results}
 To compare our results we did a single 10-fold cross validation. Our results and the results from~\cite{potash2017here} can be seen in~\autoref{tab:results}.
 Only additional configuration we present is to apply class weights into the loss calculation and using the new extended corpus.
-We were motivated to use class weights because of the highly skewed link distribution across the corpus as seen in~\autoref{fig:skew}.
+We were motivated to use class weights because of the highly skewed link and type distribution across the corpus as seen in~\autoref{fig:skew}.
 
 \begin{figure}[h]
     \centering
@@ -143,8 +147,32 @@ We were motivated to use class weights because of the highly skewed link distrib
     \caption{Distribution of links.}\label{fig:skew}
 \end{figure}
 
+\begin{table}[h]
+    \centering
+    \caption{The results of 10-fold crossvalidation of different configuration of our model.}
+    \label{tab:label}
+    \begin{tabular}{c}
+        
+    \end{tabular}
+\end{table}
+
 \section{Conclusion}
-future ideas and improvements
+We have learned a lot through this project.
+The implementation was not as straight forward as we have thought it would be.
+There are many possible future extensions we would have like to do.
+First, as the authors have suggested in \cite{potash2017here}, using a seq2seq model to represent ACs might improve the performance greatly.
+It would also eliminate the need for the fully connected layers that add a lot of unnecessary model complexity.
+However, a seq2seq representation of ACs would require much larger data.
+We suggest using a large unannotated corpus with sent2vec or \cite{sent} could prove successful.
+
+Another extension is to build an end-to-end architecture which can identify ACs in a text.
+We think that these two extensions are intertwined and should be explored together.
+
+An easier extension would be to add even more tasks to see if it helps with performance.
+The microtext corpus already has additional informations that can be used: the role of the AC, and the function of the AC.
+
+Another note for future work would be to use a deep learning framework with dynamic graphs like pytorch.
+We found it to be a much better fit for a seq2seq model.
 
 \nocite{*}
 \bibliographystyle{plain}
