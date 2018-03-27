@@ -61,9 +61,13 @@ We decided to concentrate on two tasks: classifying the type of an AC (claim or 
 Having found the paper ``Here's My Point: Joint Pointer Architecture for Argument Mining'' by Potash et al. \cite{potash2017here}, we agreed that it
 would be good to try and reproduce the architecture and results from this paper, especially because the authors claimed they achieved
 state-of-the-art results. The authors used a Pointer Network which is a modification of seq2seq (sequence-to-sequence) architecture with attention.
+
 They extended this network to simultaneously address the link extraction task and the classification of argument components.
 
-Multi-task learning in deeep neural networks has been shown to perform better in comparison to single task, which this work further demonstrates.
+It is important to note that the task of classifying argument component is actually 
+
+Multi-task learning in deep neural networks has been shown to perform better in comparison to single task, which this work further demonstrates.
+For comparison the single task of 
 A ``joint model'' (architecture can be seen in figure~\ref{fig:joint}) which was able to
 
 \begin{figure}[h]
