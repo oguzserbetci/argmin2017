@@ -28,3 +28,5 @@ logs
 *-blx.aux
 *-blx.bib
 *.run.xml
+*.gz
+*.fdb_latexmk
