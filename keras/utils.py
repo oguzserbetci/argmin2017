@@ -52,6 +52,15 @@ def flat_f1(y_true, y_pred, **kwargs):
     return f1_score(y_true, y_pred, **kwargs, pos_label=None)
 
 
+def binary_f1(y_true, y_pred, **kwargs):
+    mask_ind = _mask(y_true)
+    y_true = np.concatenate(y_true, 0)[mask_ind].argmax(-1).flatten()
+
+    y_pred = np.concatenate(y_pred, 0)
+    y_pred = y_pred[mask_ind].argmax(-1).flatten()
+    return f1_score(y_true, y_pred, **kwargs, pos_label=None)
+
+
 def _mask(y_true):
     return y_true.any(2).flatten()
 

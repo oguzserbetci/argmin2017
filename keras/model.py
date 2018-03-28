@@ -6,7 +6,7 @@ from keras.utils import multi_gpu_model
 
 
 def create_model(seq_len=10,
-                 embedding_size=2927,
+                 embedding_size=3946,
                  hidden_size=512,
                  n_gpu=0, joint=False,
                  # PARAMS

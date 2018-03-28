@@ -94,8 +94,7 @@ def preprocess(enc_input, dec_input, links, types=None):
 def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
     NUM_TRIALS = 10
     metrics = []
-    tests = defaultdict(list)
-    test_keys = ['macro', 'macro_cat', 'weighted', 'single0', 'single1']
+    tests = defaultdict(lambda: defaultdict(list))
     metric_keys = ['outer', 'inner', 'param', 'score', 'epoch']
     paramset = []
     score_keys = []
@@ -149,6 +148,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
 
         # TEST
         for param in tqdm(paramsearch, desc='params'):
+            param_str = stringify(param)
             inputs = [Xe_training, Xd_training]
             targets = [Yl_training, Yt_training] if param['joint'] else [Yl_training]
             model, history = train_model(inputs, targets, validation=None,
@@ -161,21 +161,24 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
             Y_preds = [Y_preds] if not isinstance(Y_preds, list) else Y_preds
             Y_trues = [Yl_test, Yt_test] if param['joint'] else [Yl_test]
             outputs = ['links', 'types'] if param['joint'] else ['links']
+            f1_functions = [utils.flat_f1, utils.binary_f1] if param['joint'] else [utils.flat_f1]
 
-            test_results = []
-            for Y_pred, Y_true, output in zip(Y_preds, Y_trues, outputs):
+            for Y_pred, Y_true, output, func in zip(Y_preds, Y_trues, outputs, f1_functions):
                 print(output.upper())
-                macro = utils.flat_f1(Y_true, Y_pred, average='macro')
-                macro_cat = utils.f1(Y_true, Y_pred, average='macro')
-                weighted = utils.flat_f1(Y_true, Y_pred, average='weighted')
-                singles = utils.flat_f1(Y_true, Y_pred, average=None)
+                macro = func(Y_true, Y_pred, average='macro')
+                macro_cat = utils.binary_f1(Y_true, Y_pred, average='macro')
+                weighted = func(Y_true, Y_pred, average='weighted')
+                singles = func(Y_true, Y_pred, average=None)
                 print('macro:', macro)
                 print('macro_cat:', macro_cat)
                 print('weighted:', weighted)
                 print('categories:', singles)
-                test_results += [macro, macro_cat, weighted] + list(singles)
-
-            tests[stringify(param)].append(test_results)
+                tests[param_str].setdefault('macro', []).append(macro)
+                tests[param_str].setdefault('macro_cat', []).append(macro_cat)
+                tests[param_str].setdefault('weighted', []).append(weighted)
+                tests[param_str].setdefault('cat0', []).append(singles[0])
+                tests[param_str].setdefault('cat1', []).append(singles[1])
+                print(tests[param_str])
 
         fn = '../cross_validation/{iter}'.format(iter=i)
         os.makedirs(fn, exist_ok=True)
@@ -183,14 +186,14 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
             training_data = dict(metrics=metrics, metric_keys=metric_keys,
                                  score_keys=score_keys, params=paramset,
                                  training_idx=training, test_idx=test,
-                                 tests=tests, test_keys=test_keys)
+                                 tests=dict(tests))
             pickle.dump(training_data, f)
 
     with open('../cross_validation/train.pl', 'wb') as f:
         training_data = dict(metrics=metrics, metric_keys=metric_keys,
                              score_keys=score_keys, params=paramset,
                              training_idx=training_idx, test_idx=test_idx,
-                             tests=tests, test_keys=test_keys)
+                             tests=tests)
         pickle.dump(training_data, f)
 
     print(metric_keys)
