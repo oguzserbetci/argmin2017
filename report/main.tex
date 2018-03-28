@@ -57,7 +57,7 @@ Having found the paper ``Here's My Point: Joint Pointer Architecture for Argumen
 would be good to try and reproduce the architecture and the results from this paper, especially because the authors claimed they achieved
 state-of-the-art results. The authors use a Pointer Network~\cite{pn} which is a modification of seq2seq (sequence-to-sequence) architecture~\cite{seq2seq} with attention~\cite{attention}.
 
-In \cite{potash2017here}, the pointer network architecture is extended in two ways.
+In~\cite{potash2017here}, the pointer network architecture is extended in two ways.
 First, to account for the large and sparse AC representations, fully-connected layers are added before the encoder and decoder LSTM inputs.
 Second, to improve performance an auxiliary task is added. The task is to predict whether an AC is the claim or a premise.
 Multi-task learning in deep neural networks has been shown to perform better in comparison to single task~\cite{multi}, which the results of this work further demonstrates.
@@ -158,6 +158,7 @@ We were motivated to use class weights because of the highly skewed link and typ
             Model & Macro f1 & Cl f1 & Pr f1 & Macro f1 & Link f1 & No Link f1 \\
             \hline
             Their Joint Model & 0.813 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
+            Our Joint Model   & 0.893 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
             %Our Joint Model & cell5 & cell6 \\
             %Joint with classweights & cell8 & cell9 
     \end{tabular}
