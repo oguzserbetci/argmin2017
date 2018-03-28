@@ -92,22 +92,22 @@ def preprocess(enc_input, dec_input, links, types=None):
 
 
 def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
-    NUM_TRIALS = 10
+    outer = 10
+    inner = 0
     metrics = []
     tests = defaultdict(lambda: defaultdict(list))
     metric_keys = ['outer', 'inner', 'param', 'score', 'epoch']
     paramset = []
     score_keys = []
 
-    # inner_seed = np.random.RandomState(0)
-    outer = KFold(n_splits=NUM_TRIALS, shuffle=True, random_state=1)
+    inner_seed = np.random.RandomState(0)
+    outer = KFold(n_splits=outer, shuffle=True, random_state=1)
     training_idx = []
     test_idx = []
 
     for (i, (training, test)) in tqdm(enumerate(outer.split(Xe)), desc='outer'):
         training_idx.append(training)
         test_idx.append(test)
-        # inner = KFold(n_splits=5, shuffle=True, random_state=inner_seed)
 
         metrics.append([])
 
@@ -121,30 +121,32 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
         Yl_test = Yl[test]
         Yt_test = Yt[test]
 
-        # for (k, (train, val)) in tqdm(enumerate(inner.split(Xe_training)), desc='inner'):
-            # print('data lengths', len(train),len(val),len(test))
-            # metrics[-1].append([])
-            # for param in paramsearch:
-                # param.update({'cv_iter': i})
-                # param.update({'tboard': {0:i,
-                                         # 1:k,
-                                         # 2:stringify(param)}})
+        if inner:
+            inner = KFold(n_splits=inner, shuffle=True, random_state=inner_seed)
+            for (k, (train, val)) in tqdm(enumerate(inner.split(Xe_training)), desc='inner'):
+                print('data lengths', len(train),len(val),len(test))
+                metrics[-1].append([])
+                for param in paramsearch:
+                    param.update({'cv_iter': i})
+                    param.update({'tboard': {0:i,
+                                             1:k,
+                                             2:stringify(param)}})
 
-                # if param not in paramset:
-                    # paramset.append(param)
+                    if param not in paramset:
+                        paramset.append(param)
 
-                # inputs = [Xe_training[train], Xd_training[train]]
-                # targets = [Yl_training[train], Yt_training[train]] if param['joint'] else [Yl_training[train]]
-                # if param['joint']:
-                    # validation = ([Xe_training[val], Xd_training[val]], [Yl_training[val], Yt_training[val]])
-                # else:
-                    # validation = ([Xe_training[val], Xd_training[val]], Yl_training[val])
+                    inputs = [Xe_training[train], Xd_training[train]]
+                    targets = [Yl_training[train], Yt_training[train]] if param['joint'] else [Yl_training[train]]
+                    if param['joint']:
+                        validation = ([Xe_training[val], Xd_training[val]], [Yl_training[val], Yt_training[val]])
+                    else:
+                        validation = ([Xe_training[val], Xd_training[val]], Yl_training[val])
 
-                # # TRAIN & VALIDATE
-                # model, history = train_model(inputs, targets, validation, epochs, param, n_gpu)
+                    # TRAIN & VALIDATE
+                    model, history = train_model(inputs, targets, validation, epochs, param, n_gpu)
 
-                # score_keys = list(OrderedDict(sorted(history.items())).keys())
-                # metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
+                    score_keys = list(OrderedDict(sorted(history.items())).keys())
+                    metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
 
         # TEST
         for param in tqdm(paramsearch, desc='params'):

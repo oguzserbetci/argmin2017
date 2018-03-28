@@ -10,10 +10,7 @@ def create_model(seq_len=10,
                  hidden_size=512,
                  n_gpu=0, joint=False,
                  # PARAMS
-                 dropout=0.9, recurrent_dropout=0.9,
-                 regularizer=None, activity_regularizer=None,
-                 drop_encoder=0,drop_decoder=0,
-                 drop_input=0, drop_fc=0, **kwargs):
+                 **kwargs):
 
     encoder_inputs = Input(shape=(None, embedding_size), name='input')
 
