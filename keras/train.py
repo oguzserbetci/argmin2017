@@ -149,7 +149,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
                     metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
 
         # TEST
-        for k, param in tqdm(enumerate(paramsearch(, desc='params'):
+        for k, param in tqdm(enumerate(paramsearch), desc='params'):
             param_str = stringify(param)
             inputs = [Xe_training, Xd_training]
             targets = [Yl_training, Yt_training] if param['joint'] else [Yl_training]
