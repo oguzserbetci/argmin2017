@@ -149,10 +149,16 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
                     metrics[-1][-1].append(list(OrderedDict(sorted(history.items())).values()))
 
         # TEST
-        for param in tqdm(paramsearch, desc='params'):
+        for k, param in tqdm(enumerate(paramsearch(, desc='params'):
             param_str = stringify(param)
             inputs = [Xe_training, Xd_training]
             targets = [Yl_training, Yt_training] if param['joint'] else [Yl_training]
+
+            param.update({'cv_iter': i})
+            param.update({'tboard': {0:i,
+                                     1:k,
+                                     2:stringify(param)}})
+
             model, history = train_model(inputs, targets, validation=None,
                                          epochs=epochs, param=param, n_gpu=n_gpu)
             model.save('../cross_validation/{}_{}.h5'.format(stringify(param), i))
