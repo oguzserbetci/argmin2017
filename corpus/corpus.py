@@ -54,6 +54,7 @@ class ArgumentTree(object):
         self.children.append(child)
         child.parent = self
 
+
 def read_ac(xml):
     arguments = {x.get('id'):x.text for x in xml.findall('edu')}
     edges = [x for x in xml.findall('edge')]
@@ -80,7 +81,7 @@ nlp = spacy.load('en_core_web_lg', disable=['parser', 'tagger', 'ner'])
 
 class MTCorpus(object):
     def __init__(self):
-        files = sorted(glob('./arg-microtexts/corpus/en/*.xml'))
+        files = sorted(glob('./arg-microtexts/corpus/en_extended/*.xml'))
         self.links = []
         self.types = []
         self.documents = []
@@ -89,19 +90,50 @@ class MTCorpus(object):
         for file in files:
             with open(file,'r',encoding='UTF-8') as file:
                 xml = ET.parse(file)
+                # get the start index to acccount for difference between new and old
+                # corpus
+                base = xml.findall('edu')
+                base = int(base[0].get('id')[1])
                 ac_tree = read_ac(xml)
-                y = [int(ac_tree.search('a{}'.format(i)).p_value[1:]) for i in range(1, len(ac_tree) + 1)]
-                self.links.append(y)
-                types = [int(ac_tree.search('a{}'.format(i)).is_root) for i in range(1, len(ac_tree) + 1)]
-                self.types.append(types)
+
+                y = []
+                cont = False
+                for i in range(base, len(ac_tree) + base):
+                    try:
+                        y.append(int(ac_tree.search('a{}'.format(i)).p_value[1:]) - base)
+                    except:
+                        cont = True
+                        break
+
+                types = []
+                for i in range(base, len(ac_tree) + base):
+                    try:
+                        types.append(int(ac_tree.search('a{}'.format(i)).is_root))
+                    except:
+                        cont = True
+                        break
+
                 '''Tokenizes a string.'''
                 acs = ['0']  # start token for decoder input
-                acs += [ac_tree.search('e{}'.format(i)).text for i in range(1, len(ac_tree) + 1)]
+                for i in range(base, len(ac_tree) + base):
+                    try:
+                        acs += [ac_tree.search('e{}'.format(i)).text]
+                    except:
+                        cont = True
+                        break
+
+                if cont:
+                    continue
+
+                self.links.append(y)
+                self.types.append(types)
                 piped_acs = list(nlp.pipe(acs))
                 acs = [' '.join([word.text for word in ac]) for ac in piped_acs]
                 vectors = [[word.vector for word in ac] for ac in piped_acs]
                 self.vectors.append(vectors)
                 self.documents.append(acs)  # list of list of sentences.
+
+        print(len(self.documents), len(self.links), len(self.types), len(self.vectors))
 
         base = np.min(np.min(self.links))
         self.links = [np.array(link) - base for link in self.links]
@@ -137,10 +169,10 @@ class MTCorpus(object):
 
 def write_on_disk():
     corpus = MTCorpus()
-    np.save('encoder_input', corpus.encoder_input)
-    np.save('decoder_input', corpus.decoder_input)
-    np.save('Y_links_1', corpus.links)
-    np.save('Y_types_1', corpus.types)
+    np.save('encoder_input_ext', corpus.encoder_input)
+    np.save('decoder_input_ext', corpus.decoder_input)
+    np.save('Y_links_ext', corpus.links)
+    np.save('Y_types_ext', corpus.types)
 
 
 if __name__ == "__main__":
