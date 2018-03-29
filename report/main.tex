@@ -136,6 +136,8 @@ This has resulted in significantly worse results which led us to tinker with our
 This mistake and its correction has been a great learning for us, however, we note that the binary measure makes the results look much better than they are,
 since by definition in the worst case for $n$ ACs the network gets $n-2$ absence of links correct. Therefore, taking the macro average of the binary f1 score is misleading. We think the result that most telling is the f1 score for the prediction of the presence of links.
 
+TODO: new data had different index start, had structures which the script couldn't parse.
+
 \section{Results}
 To compare our results we did a single 10-fold cross validation. Our results and the results from~\cite{potash2017here} can be seen in~\autoref{tab:results}.
 Only additional configuration we present is to apply class weights into the loss calculation and using the new extended corpus.
