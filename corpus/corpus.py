@@ -80,8 +80,8 @@ nlp = spacy.load('en_core_web_lg', disable=['parser', 'tagger', 'ner'])
 
 
 class MTCorpus(object):
-    def __init__(self):
-        files = sorted(glob('./arg-microtexts/corpus/en_extended/*.xml'))
+    def __init__(self, globpath='./arg-microtexts/corpus/en_extended/*.xml', simplify=False):
+        files = sorted(glob(globpath))
         self.links = []
         self.types = []
         self.documents = []
@@ -90,58 +90,52 @@ class MTCorpus(object):
         for file in files:
             with open(file,'r',encoding='UTF-8') as file:
                 xml = ET.parse(file)
-                # get the start index to acccount for difference between new and old
-                # corpus
+                # get the start index to acccount for difference between new and old corpus
                 base = xml.findall('edu')
                 base = int(base[0].get('id')[1])
                 ac_tree = read_ac(xml)
 
                 y = []
+                types = []
+                acs = ['0']  # start token for decoder input
                 cont = False
                 for i in range(base, len(ac_tree) + base):
                     try:
                         y.append(int(ac_tree.search('a{}'.format(i)).p_value[1:]) - base)
-                    except:
-                        cont = True
-                        break
-
-                types = []
-                for i in range(base, len(ac_tree) + base):
-                    try:
                         types.append(int(ac_tree.search('a{}'.format(i)).is_root))
-                    except:
-                        cont = True
-                        break
-
-                '''Tokenizes a string.'''
-                acs = ['0']  # start token for decoder input
-                for i in range(base, len(ac_tree) + base):
-                    try:
                         acs += [ac_tree.search('e{}'.format(i)).text]
                     except:
                         cont = True
                         break
 
-                if cont:
-                    continue
+                if cont: continue
 
                 self.links.append(y)
                 self.types.append(types)
                 piped_acs = list(nlp.pipe(acs))
-                acs = [' '.join([word.text for word in ac]) for ac in piped_acs]
+                if simplify:
+                    acs = [' '.join([_simplify_word(word) for word in ac if not word.is_stop and
+                                     word.tag != "PUNCT"]) for ac in piped_acs]
+                else:
+                    acs = [' '.join([word.text for word in ac]) for ac in piped_acs]
                 vectors = [[word.vector for word in ac] for ac in piped_acs]
                 self.vectors.append(vectors)
                 self.documents.append(acs)  # list of list of sentences.
 
-        print(len(self.documents), len(self.links), len(self.types), len(self.vectors))
-
-        base = np.min(np.min(self.links))
-        self.links = [np.array(link) - base for link in self.links]
+        assert(len(self.documents) == len(self.links) == len(self.types) == len(self.vectors))
 
         self.clf = CountVectorizer()
         self.clf.fit(sent for doc in self.documents for sent in doc)
 
         self.encoder_input, self.decoder_input = self._inputs()
+        print('{} data points, with embedding size: {}'.format(len(self.documents),
+                                                               self.encoder_input[0].shape[-1]))
+
+    def write_on_disk(self, ei, di, yl, yt):
+        np.save(ei, self.encoder_input)
+        np.save(di, self.decoder_input)
+        np.save(yl, self.links)
+        np.save(yt, self.types)
 
     def _inputs(self):
         encoder_input = []
@@ -167,19 +161,22 @@ class MTCorpus(object):
         return encoder_input, decoder_input
 
 
-def write_on_disk(ei, di, yl, yt):
-    corpus = MTCorpus()
-    np.save(ei, corpus.encoder_input)
-    np.save(di, corpus.decoder_input)
-    np.save(yl, corpus.links)
-    np.save(yt, corpus.types)
+def _simplify_word(word):
+    if word.pos_ in ["SYM", "PUNCT", "ADD"]:
+        return word.pos_
+    else:
+        return word.lemma_
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--path', help='Glob for corpus files',
+                        default='./arg-microtexts/corpus/en_extended/*.xml', type=str)
     parser.add_argument('-ei', '--enc_input', help='Encoder Input', type=str)
     parser.add_argument('-di', '--dec_input', help='Decoder Input', type=str)
     parser.add_argument('-l', '--links', help='Links', type=str)
-    parser.add_argument('-t', '--types', help='Types', type=str, default=None)
+    parser.add_argument('-t', '--types', help='Types', type=str)
+    parser.add_argument('--simplify', action='store_true', help='Simplify for BoW')
     args = parser.parse_args()
-    write_on_disk(args.enc_input, args.dec_input, args.links, args.types)
+    corpus = MTCorpus(args.path, args.simplify)
+    corpus.write_on_disk(args.enc_input, args.dec_input, args.links, args.types)
