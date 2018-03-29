@@ -167,13 +167,19 @@ class MTCorpus(object):
         return encoder_input, decoder_input
 
 
-def write_on_disk():
+def write_on_disk(ei, di, yl, yt):
     corpus = MTCorpus()
-    np.save('encoder_input_ext', corpus.encoder_input)
-    np.save('decoder_input_ext', corpus.decoder_input)
-    np.save('Y_links_ext', corpus.links)
-    np.save('Y_types_ext', corpus.types)
+    np.save(ei, corpus.encoder_input)
+    np.save(di, corpus.decoder_input)
+    np.save(yl, corpus.links)
+    np.save(yt, corpus.types)
 
 
 if __name__ == "__main__":
-    write_on_disk()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-ei', '--enc_input', help='Encoder Input', type=str)
+    parser.add_argument('-di', '--dec_input', help='Decoder Input', type=str)
+    parser.add_argument('-l', '--links', help='Links', type=str)
+    parser.add_argument('-t', '--types', help='Types', type=str, default=None)
+    args = parser.parse_args()
+    write_on_disk(args.enc_input, args.dec_input, args.links, args.types)
