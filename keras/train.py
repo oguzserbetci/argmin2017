@@ -95,7 +95,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
     outer = 10
     inner = 0
     metrics = []
-    tests = defaultdict(lambda: defaultdict(list))
+    tests = defaultdict(dict)
     metric_keys = ['outer', 'inner', 'param', 'score', 'epoch']
     paramset = []
     score_keys = []
@@ -194,7 +194,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
             training_data = dict(metrics=metrics, metric_keys=metric_keys,
                                  score_keys=score_keys, params=paramset,
                                  training_idx=training, test_idx=test,
-                                 tests=dict(tests))
+                                 tests=tests)
             pickle.dump(training_data, f)
 
     with open('../cross_validation/train.pl', 'wb') as f:
@@ -228,7 +228,8 @@ def train_model(inputs, targets, validation, epochs, param, n_gpu=0, model=None)
     loss_weights = [0.5, 0.5] if params['joint'] else None
 
     if model is None:
-        model = create_model(**params)
+        embedding_size = inputs[0].shape[-1]
+        model = create_model(embedding_size=embedding_size, **params)
 
         model.compile(optimizer=params.get('optimizer', 'adam'),
                       loss='categorical_crossentropy',
