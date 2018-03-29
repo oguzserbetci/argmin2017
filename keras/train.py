@@ -125,7 +125,6 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
                 print('data lengths', len(train),len(val),len(test))
                 metrics[-1].append([])
                 for param in paramsearch:
-                    param.update({'cv_iter': i})
                     param.update({'tboard': {0:i,
                                              1:k,
                                              2:stringify(param)}})
@@ -152,7 +151,6 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
             inputs = [Xe_training, Xd_training]
             targets = [Yl_training, Yt_training] if param['joint'] else [Yl_training]
 
-            param.update({'cv_iter': i})
             param.update({'tboard': {0:i,
                                      1:k,
                                      2:stringify(param)}})
