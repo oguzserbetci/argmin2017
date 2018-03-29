@@ -27,10 +27,8 @@ fixed_param = dict(regularizer=None, hidden_size=512,
                    seq_len=MAX_LEN, batch_size=16, dropout=0.9, recurrent_dropout=0.9)
 
 paramsearch = [
-    dict(di=True, c_weights=True, joint=True),
-    dict(di=True, c_weights=False, joint=True),
-    dict(di=True, c_weights=True, joint=False),
-    dict(di=True, c_weights=False, joint=False),
+    dict(di=True, ext=True, c_weights=True, joint=True),
+    dict(di=True, ext=True, c_weights=False, joint=True),
 ]
 
 
@@ -188,7 +186,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
                 tests[param_str].setdefault('{}_cat1'.format(output), []).append(singles[1])
                 print(tests[param_str])
 
-        fn = '../cross_validation/{iter}'.format(iter=i)
+        fn = '../cross_validation/ext_{iter}'.format(iter=i)
         os.makedirs(fn, exist_ok=True)
         with open(fn+'/train.pl', 'wb') as f:
             training_data = dict(metrics=metrics, metric_keys=metric_keys,
@@ -197,7 +195,7 @@ def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):
                                  tests=tests)
             pickle.dump(training_data, f)
 
-    with open('../cross_validation/train.pl', 'wb') as f:
+    with open('../cross_validation/ext_train.pl', 'wb') as f:
         training_data = dict(metrics=metrics, metric_keys=metric_keys,
                              score_keys=score_keys, params=paramset,
                              training_idx=training_idx, test_idx=test_idx,
