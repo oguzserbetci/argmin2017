@@ -1,9 +1,9 @@
+from sklearn.feature_extraction.text import CountVectorizer
+import xml.etree.ElementTree as ET
 from glob import glob
 import numpy as np
+import argparse
 import spacy
-from collections import defaultdict
-import xml.etree.ElementTree as ET
-from sklearn.feature_extraction.text import CountVectorizer
 
 
 class ArgumentTree(object):
