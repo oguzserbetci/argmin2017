@@ -1,11 +1,13 @@
 # argmin2017
 Argumentation Mining Project, Uni Potsdam, WS17/18
 
+This repository includes code that is implementing and reproducing results from Potash et al. [3].
+
 ## Data
 We use microtext corpus [1] from [`peldszus/arg-microtexts`](https://github.com/peldszus/arg-microtexts).
 
 ## Architecture
-We use a pointer network [2] architecture for argument mining as described in [3].
+We use a seq-to-seq pointer network [2] architecture for argument mining as described in [3].
 
 ## Setup
 Pipenv is used for dependencies and for virtual environment. Setting up a new python 3 virtual environment with `pipenv` is easy:
@@ -15,7 +17,7 @@ brew install pipenv
 pipenv install --three [--dev] # use --dev for embedding the corpus later
 ```
 
-Enter the virtual environment with `pipenv source` command.
+Enter the virtual environment with `pipenv source`.
 
 ## Training
 First, you need to create the embeddings for the microtext corpus [1]:
@@ -44,7 +46,7 @@ CUDA_VISIBLE_DEVICES=0,1 python train.py -ei ../corpus/encoder_input.npy -di ../
 ```
 
 ## Results
-Results are written in `cross_validation/` you can inspect it with the notebooks inside `notebooks/`
+Results are written in `cross_validation/` you can inspect it with the jupyter notebooks in `notebooks/`
 
 ## NOTE
 pytorch implementation is **not complete** and not tested.

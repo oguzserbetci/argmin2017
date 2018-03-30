@@ -1,0 +1,153 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+Activation	keras/model.py	/^from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate$/;"	i
+Add	keras/model.py	/^from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate$/;"	i
+Approach	report/main.tex	/^\\section{Approach}$/;"	s
+Architecture	report/main.tex	/^\\subsection{Architecture}$/;"	t
+ArgumentTree	corpus/corpus.py	/^class ArgumentTree(object):$/;"	c
+AttnDecoderRNN	pytorch/pytorch.py	/^class AttnDecoderRNN(nn.Module):$/;"	c
+Bidirectional	keras/model.py	/^from keras.layers import TimeDistributed, Bidirectional, Masking, Dropout$/;"	i
+Callback	keras/utils.py	/^from keras.callbacks import Callback$/;"	i
+Callback	utils.py	/^from keras.callbacks import Callback$/;"	i
+Challenges	report/main.tex	/^\\subsection{Challenges}$/;"	t
+Concatenate	keras/model.py	/^from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate$/;"	i
+Conclusion	report/main.tex	/^\\section{Conclusion}$/;"	s
+CountVectorizer	corpus/corpus.py	/^from sklearn.feature_extraction.text import CountVectorizer$/;"	i
+DecoderRNN	pytorch/pytorch.py	/^class DecoderRNN(nn.Module):$/;"	c
+Dense	keras/model.py	/^from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate$/;"	i
+Dropout	keras/model.py	/^from keras.layers import TimeDistributed, Bidirectional, Masking, Dropout$/;"	i
+ET	corpus/corpus.py	/^import xml.etree.ElementTree as ET$/;"	i
+EarlyStopping	keras/train.py	/^from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard$/;"	i
+EncoderRNN	pytorch/pytorch.py	/^class EncoderRNN(nn.Module):$/;"	c
+F	pytorch/pytorch.py	/^import torch.nn.functional as F$/;"	i
+Implementation \& Organisation	report/main.tex	/^\\subsection{Implementation \\& Organisation}$/;"	t
+Input	keras/model.py	/^from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate$/;"	i
+Inspiration	report/main.tex	/^\\subsection{Inspiration}$/;"	t
+JointMetrics	keras/utils.py	/^class JointMetrics(Callback):$/;"	c
+JointMetrics	utils.py	/^class JointMetrics(Callback):$/;"	c
+K	keras/model.py	/^from keras import backend as K$/;"	i
+K	keras/utils.py	/^import keras.backend as K$/;"	i
+K	utils.py	/^import keras.backend as K$/;"	i
+KFold	keras/train.py	/^from sklearn.model_selection import KFold$/;"	i
+LSTM	keras/model.py	/^from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate$/;"	i
+Lambda	keras/model.py	/^from keras.layers import LSTM, Input, Dense, Activation, Add, Lambda, Concatenate$/;"	i
+MAX_LEN	keras/train.py	/^MAX_LEN = 10$/;"	v
+MAX_LEN	pytorch/pytorch.py	/^MAX_LEN = 7$/;"	v
+MTCorpus	corpus/corpus.py	/^class MTCorpus(object):$/;"	c
+Masking	keras/model.py	/^from keras.layers import TimeDistributed, Bidirectional, Masking, Dropout$/;"	i
+Metrics	keras/utils.py	/^class Metrics(Callback):$/;"	c
+Metrics	utils.py	/^class Metrics(Callback):$/;"	c
+Model	keras/model.py	/^from keras.models import Model$/;"	i
+ModelCheckpoint	keras/train.py	/^from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard$/;"	i
+OrderedDict	keras/train.py	/^from collections import OrderedDict$/;"	i
+REPR_SIZE	keras/train.py	/^REPR_SIZE = 2927$/;"	v
+Results	report/main.tex	/^\\section{Results}$/;"	s
+Task \& Data	report/main.tex	/^\\section{Task \\& Data}$/;"	s
+TensorBoard	keras/train.py	/^from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard$/;"	i
+TimeDistributed	keras/model.py	/^from keras.layers import TimeDistributed, Bidirectional, Masking, Dropout$/;"	i
+Variable	pytorch/pytorch.py	/^from torch.autograd import Variable$/;"	i
+__init__	corpus/corpus.py	/^    def __init__(self, globpath='.\/arg-microtexts\/corpus\/en_extended\/*.xml', simplify=False):$/;"	m	class:MTCorpus
+__init__	corpus/corpus.py	/^    def __init__(self, value, text=None):$/;"	m	class:ArgumentTree
+__init__	pytorch/pytorch.py	/^    def __init__(self, hidden_size, output_size):$/;"	m	class:DecoderRNN
+__init__	pytorch/pytorch.py	/^    def __init__(self, hidden_size, output_size, dropout_p=0.1, max_length=MAX_LEN):$/;"	m	class:AttnDecoderRNN
+__init__	pytorch/pytorch.py	/^    def __init__(self, input_size, hidden_size):$/;"	m	class:EncoderRNN
+__len__	corpus/corpus.py	/^    def __len__(self):$/;"	m	class:ArgumentTree	file:
+__repr__	corpus/corpus.py	/^    def __repr__(self):$/;"	m	class:ArgumentTree	file:
+_flat_f1	utils.py	/^def _flat_f1(y_true, y_pred):$/;"	f
+_inputs	corpus/corpus.py	/^    def _inputs(self):$/;"	m	class:MTCorpus
+_mask	keras/utils.py	/^def _mask(y_true):$/;"	f
+_mask	utils.py	/^def _mask(y_true):$/;"	f
+_simplify_word	corpus/corpus.py	/^def _simplify_word(word):$/;"	f
+add	corpus/corpus.py	/^    def add(self, child):$/;"	m	class:ArgumentTree
+argparse	corpus/corpus.py	/^import argparse$/;"	i
+argparse	keras/train.py	/^import argparse$/;"	i
+args	keras/train.py	/^    args = parser.parse_args()$/;"	v
+binary_f1	keras/utils.py	/^def binary_f1(y_true, y_pred, **kwargs):$/;"	f
+class_weight	keras/train.py	/^from sklearn.utils import class_weight$/;"	i
+create_model	keras/model.py	/^def create_model(seq_len=10,$/;"	f
+create_model	keras/train.py	/^from model import create_model$/;"	i
+crossvalidation	keras/train.py	/^def crossvalidation(Xe, Xd, Yl, Yt, epochs, paramsearch, n_gpu):$/;"	f
+defaultdict	keras/train.py	/^from collections import defaultdict$/;"	i
+defaultdict	keras/utils.py	/^from collections import defaultdict$/;"	i
+defaultdict	utils.py	/^from collections import defaultdict$/;"	i
+dtd	arg-microtexts/corpus/validate.py	/^    dtd = etree.DTD("arggraph.dtd")$/;"	v
+e	arg-microtexts/corpus/validate.py	/^                e = etree.parse(p)$/;"	v
+etree	arg-microtexts/corpus/validate.py	/^from lxml import etree$/;"	i
+etree	corpus/corpus.py	/^import xml.etree.ElementTree as ET$/;"	i
+f1	keras/utils.py	/^def f1(y_true, y_pred, **kwargs):$/;"	f
+f1	utils.py	/^def f1(y_true, y_pred):$/;"	f
+f1_metric	keras/utils.py	/^def f1_metric(y_true, y_pred):$/;"	f
+f1_score	keras/utils.py	/^from sklearn.metrics import f1_score$/;"	i
+f1_score	utils.py	/^from sklearn.metrics import f1_score$/;"	i
+fig:link	report/main.tex	/^    \\caption{Diagram of the model for predicting the outgoing link from $\\text{AC}_1$. Thick edges represent a dot product with a parameter matrix.}\\label{fig:link}$/;"	l
+fig:microtext	report/main.tex	/^            The arcs connecting the nodes represent different supporting and attacking moves.}\\label{fig:microtext}$/;"	l
+fig:seq2seq	report/main.tex	/^    \\caption{Seq2seq architecture of Pointer Network on the left and the predicted argument structure with 4 ACs on the right.}\\label{fig:seq2seq}$/;"	l
+fig:skew	report/main.tex	/^    \\caption{Distribution of links.}\\label{fig:skew}$/;"	l
+fig:type	report/main.tex	/^    \\caption{Diagram of the model for predicting type of $\\text{AC}_1$. FC3 is a single fully connected layer that is being applied to each AC to predict the type.}\\label{fig:type}$/;"	l
+fixed_param	keras/train.py	/^fixed_param = dict(regularizer=None, hidden_size=512,$/;"	v
+flat_f1	keras/utils.py	/^def flat_f1(y_true, y_pred, **kwargs):$/;"	f
+forward	pytorch/pytorch.py	/^    def forward(self, input, hidden):$/;"	m	class:DecoderRNN
+forward	pytorch/pytorch.py	/^    def forward(self, input, hidden):$/;"	m	class:EncoderRNN
+forward	pytorch/pytorch.py	/^    def forward(self, input, hidden, encoder_outputs):$/;"	m	class:AttnDecoderRNN
+get_class_weights	keras/train.py	/^def get_class_weights(Y):$/;"	f
+get_sample_weights	keras/train.py	/^def get_sample_weights(Ys):$/;"	f
+glob	corpus/corpus.py	/^from glob import glob$/;"	i
+initHidden	pytorch/pytorch.py	/^    def initHidden(self):$/;"	m	class:EncoderRNN
+init_hidden	pytorch/pytorch.py	/^    def init_hidden(self):$/;"	m	class:AttnDecoderRNN
+init_hidden	pytorch/pytorch.py	/^    def init_hidden(self):$/;"	m	class:DecoderRNN
+is_root	corpus/corpus.py	/^    def is_root(self):$/;"	m	class:ArgumentTree
+keras	keras/utils.py	/^import keras.backend as K$/;"	i
+keras	utils.py	/^import keras.backend as K$/;"	i
+load_vec	keras/train.py	/^def load_vec(enc_input, dec_input, links, types=None):$/;"	f
+main	keras/train.py	/^def main(enc_input, dec_input, links, types=None, epochs=1000, paramsearch=paramsearch, n_gpu=None):$/;"	f
+multi_gpu_model	keras/model.py	/^from keras.utils import multi_gpu_model$/;"	i
+nlp	corpus/corpus.py	/^nlp = spacy.load('en_core_web_lg', disable=['parser', 'tagger', 'ner'])$/;"	v
+nn	pytorch/pytorch.py	/^import torch.nn as nn$/;"	i
+nn	pytorch/pytorch.py	/^import torch.nn.functional as F$/;"	i
+np	corpus/corpus.py	/^import numpy as np$/;"	i
+np	keras/train.py	/^import numpy as np$/;"	i
+np	keras/utils.py	/^import numpy as np$/;"	i
+np	utils.py	/^import numpy as np$/;"	i
+on_epoch_end	keras/utils.py	/^    def on_epoch_end(self, batch, logs={}):$/;"	m	class:JointMetrics
+on_epoch_end	keras/utils.py	/^    def on_epoch_end(self, batch, logs={}):$/;"	m	class:Metrics
+on_epoch_end	utils.py	/^    def on_epoch_end(self, batch, logs={}):$/;"	m	class:JointMetrics
+on_epoch_end	utils.py	/^    def on_epoch_end(self, batch, logs={}):$/;"	m	class:Metrics
+on_train_begin	keras/utils.py	/^    def on_train_begin(self, logs={}):$/;"	m	class:JointMetrics
+on_train_begin	keras/utils.py	/^    def on_train_begin(self, logs={}):$/;"	m	class:Metrics
+on_train_begin	utils.py	/^    def on_train_begin(self, logs={}):$/;"	m	class:JointMetrics
+on_train_begin	utils.py	/^    def on_train_begin(self, logs={}):$/;"	m	class:Metrics
+optim	pytorch/pytorch.py	/^from torch import optim$/;"	i
+os	arg-microtexts/corpus/validate.py	/^import os$/;"	i
+os	keras/train.py	/^import os$/;"	i
+p	arg-microtexts/corpus/validate.py	/^                p = os.path.join(root, filename)$/;"	v
+p_value	corpus/corpus.py	/^    def p_value(self):$/;"	m	class:ArgumentTree
+pad_sequences	keras/train.py	/^from keras.preprocessing.sequence import pad_sequences$/;"	i
+paramsearch	keras/train.py	/^paramsearch = [$/;"	v
+parser	keras/train.py	/^    parser = argparse.ArgumentParser()$/;"	v
+pickle	keras/train.py	/^import pickle$/;"	i
+precision	keras/utils.py	/^    def precision(y_true, y_pred):$/;"	f	function:f1_metric
+precision	utils.py	/^    def precision(y_true, y_pred):$/;"	f	function:f1
+preprocess	keras/train.py	/^def preprocess(enc_input, dec_input, links, types=None):$/;"	f
+read_ac	corpus/corpus.py	/^def read_ac(xml):$/;"	f
+recall	keras/utils.py	/^    def recall(y_true, y_pred):$/;"	f	function:f1_metric
+recall	utils.py	/^    def recall(y_true, y_pred):$/;"	f	function:f1
+root	corpus/corpus.py	/^    def root(self):$/;"	m	class:ArgumentTree
+search	corpus/corpus.py	/^    def search(self, value):$/;"	m	class:ArgumentTree
+seed	keras/train.py	/^seed = 7$/;"	v
+spacy	corpus/corpus.py	/^import spacy$/;"	i
+stringify	keras/train.py	/^def stringify(param):$/;"	f
+tab:res	report/main.tex	/^    \\caption{The results of 10-fold cross-validation of different configuration of our model.}\\label{tab:res}$/;"	l
+to_categorical	keras/train.py	/^from keras.utils import to_categorical$/;"	i
+torch	pytorch/pytorch.py	/^import torch$/;"	i
+torch	pytorch/pytorch.py	/^import torch.nn as nn$/;"	i
+torch	pytorch/pytorch.py	/^import torch.nn.functional as F$/;"	i
+tqdm	keras/train.py	/^from tqdm import tqdm$/;"	i
+train_model	keras/train.py	/^def train_model(inputs, targets, validation, epochs, param, n_gpu=0, model=None):$/;"	f
+utils	keras/train.py	/^import utils$/;"	i
+v	arg-microtexts/corpus/validate.py	/^                v = dtd.validate(e)$/;"	v
+write_on_disk	corpus/corpus.py	/^    def write_on_disk(self, ei, di, yl, yt):$/;"	m	class:MTCorpus
+xml	corpus/corpus.py	/^import xml.etree.ElementTree as ET$/;"	i
