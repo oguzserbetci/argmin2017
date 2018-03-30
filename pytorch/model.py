@@ -113,6 +113,10 @@ class PointerNetwork(nn.Module):
         self.encoder = Encoder(embedding_size, hidden_size, dropout)
         self.decoder = Decoder(embedding_size, hidden_size, dropout)
         self.attention = Attention(hidden_size, hidden_size, dropout)
+        self.training = True
+
+    def set_training(self, training):
+        self.training = training
 
     def forward(self, encoder_inputs, decoder_inputs):
         '''
@@ -144,7 +148,7 @@ class PointerNetwork(nn.Module):
 
         decoder_outputs = Variable(torch.zeros(1, seq_length, self.hidden_size))
 
-        use_teacher_forcing = True
+        use_teacher_forcing = self.training
         outputs = []
         if use_teacher_forcing:
             for di in range(seq_length):
