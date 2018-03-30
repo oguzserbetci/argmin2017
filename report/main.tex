@@ -151,20 +151,20 @@ We were motivated to use class weights because of the highly skewed link and typ
 
 \begin{table}[h]
     \centering
-    \caption{The results of 10-fold cross-validation of different configuration of our model.}\label{tab:res}
     \begin{tabular}{| l || c | c | c | c | c | c |}
-        \toprule
+        \hline
         & \multicolumn{3}{|c|}{Type prediction} & \multicolumn{3}{|c|}{Link prediction} \\ 
-        \midrule
+        \hline
         Model & Macro f1 & Cl f1 & Pr f1 & Macro f1 & Link f1 & No Link f1 \\
-        \midrule
+        \hline
         Their Joint Model                 & 0.813 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
         Our Joint Model                   & 0.824 & 0.714 & 0.934 & 0.737 & 0.526 & 0.947 \\
         Our Single Task Model             &   –   &   –   &   –   & 0.755 & 0.559 & 0.951 \\
         Our Joint Model with loss weights & 0.806 & 0.699 & 0.913 & 0.725 & 0.505 & 0.945 \\
         Our Joint Model with new data     & 0.809 & 0.695 & 0.922 & 0.716 & 0.516 & 0.943 \\
-        \midrule
+        \hline
     \end{tabular}
+    \caption{The results of 10-fold cross-validation of different configuration of our model.}\label{tab:res}
 \end{table}
 
 Our results presented in \autoref{tab:res} shows similar scores as reported in~\cite{potash2017here}, which we include in the table for convenience.
