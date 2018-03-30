@@ -136,7 +136,7 @@ This has resulted in significantly worse results which led us to tinker with our
 This mistake and its correction has been a great learning for us, however, we note that the binary measure makes the results look much better than they are,
 since by definition in the worst case for $n$ ACs the network gets $n-2$ absence of links correct. Therefore, taking the macro average of the binary f1 score is misleading. We think the result that most telling is the f1 score for the prediction of the presence of links.
 
-TODO: new data had different index start, had structures which the script couldn't parse.
+We had to account for the different indexing scheme between the newly annotated corpus.
 
 \section{Results}
 To compare our results we did a single 10-fold cross validation. Our results and the results from~\cite{potash2017here} can be seen in~\autoref{tab:results}.
@@ -151,20 +151,28 @@ We were motivated to use class weights because of the highly skewed link and typ
 
 \begin{table}[h]
     \centering
-    \caption{The results of 10-fold crossvalidation of different configuration of our model.}
-    \label{tab:label}
-    \begin{tabular}{ | l || c | c | c | c | c | c | }
-            \hline
-            & \multicolumn{3}{|c|}{Type prediction} & \multicolumn{3}{|c|}{Link prediction} \\ 
-            \hline
-            Model & Macro f1 & Cl f1 & Pr f1 & Macro f1 & Link f1 & No Link f1 \\
-            \hline
-            Their Joint Model & 0.813 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
-            Our Joint Model   & 0.893 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
-            %Our Joint Model & cell5 & cell6 \\
-            %Joint with classweights & cell8 & cell9 
+    \caption{The results of 10-fold cross-validation of different configuration of our model.}\label{tab:res}
+    \begin{tabular}{| l || c | c | c | c | c | c |}
+        \toprule
+        & \multicolumn{3}{|c|}{Type prediction} & \multicolumn{3}{|c|}{Link prediction} \\ 
+        \midrule
+        Model & Macro f1 & Cl f1 & Pr f1 & Macro f1 & Link f1 & No Link f1 \\
+        \midrule
+        Their Joint Model                 & 0.813 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
+        Our Joint Model                   & 0.824 & 0.714 & 0.934 & 0.737 & 0.526 & 0.947 \\
+        Our Single Task Model             &   –   &   –   &   –   & 0.755 & 0.559 & 0.951 \\
+        Our Joint Model with loss weights & 0.806 & 0.699 & 0.913 & 0.725 & 0.505 & 0.945 \\
+        Our Joint Model with new data     & 0.809 & 0.695 & 0.922 & 0.716 & 0.516 & 0.943 \\
+        \midrule
     \end{tabular}
 \end{table}
+
+Our results presented in \autoref{tab:res} shows similar scores as reported in~\cite{potash2017here}, which we include in the table for convenience.
+One interesting observation is that our single task model had better performance on link prediction in contrast to results reported in \cite{potash2017here} for the Persuasive Essay corpus
+(\cite{potash2017here} does not include the single task performance on the microtext corpus.)
+
+One additional test we did was to weight the loss during training according to class weights of links and types.
+As seen in \autoref{tab:res} this worsens the performance.
 
 \section{Conclusion}
 We have learned a lot through this project.
