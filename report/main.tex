@@ -26,7 +26,7 @@
 
 \begin{abstract}
 
-Structure prediction on ``microtext'' corpus. We used the functional Keras API throughout the project. The code can be found on GitHub at \url{https://github.com/oguzserbetci/argmin2017}.
+Structure prediction on ``microtext'' corpus. We used the recently proposed architecture by Potash et al. The code can be found on GitHub at \url{https://github.com/oguzserbetci/argmin2017}.
 
 \end{abstract}
 
@@ -156,10 +156,10 @@ To compare our results we did a 10-fold cross validation. Our results and the re
         Model & Macro f1 & Cl f1 & Pr f1 & Macro f1 & Link f1 & No Link f1 \\
         \hline
         Their Joint Model                 & 0.813 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
-        Our Joint Model                   & 0.824 & 0.714 & 0.934 & 0.737 & 0.526 & 0.947 \\
-        Our Single Task Model             &   –   &   –   &   –   & 0.755 & 0.559 & 0.951 \\
-        Our Joint Model with new data     & 0.809 & 0.695 & 0.922 & 0.716 & 0.516 & 0.943 \\
-        Our Joint Model with loss weights & 0.806 & 0.699 & 0.913 & 0.725 & 0.505 & 0.945 \\
+        Our Joint Model                   & 0.831 & 0.725 & 0.938 & 0.753 & 0.556 & 0.951 \\
+        Our Joint Model with loss weights & 0.805 & 0.703 & 0.908 & 0.744 & 0.538 & 0.949 \\
+        Our Single Task Model             &   –   &   –   &   –   & 0.765 & 0.576 & 0.953 \\
+        Our Joint Model with new data     & 0.822 & 0.716 & 0.929 & 0.730 & 0.514 & 0.946 \\
         \hline
     \end{tabular}
     \caption{The results of 10-fold cross-validation of different configuration of our model.}\label{tab:res}
@@ -170,6 +170,8 @@ One interesting observation is that our single task model had better performance
 (\cite{potash2017here} does not include the single task performance on the microtext corpus.)
 
 We also present results from the new extended corpus.
+It is surprising that the results does not get better with more data.
+We did not have enough time to inspect the cause.
 
 Another additional configuration we present is to apply class weights as a weight to loss calculation.
 We were motivated to use class weights because of the highly skewed link and type distribution across the corpus as seen in~\autoref{fig:skew}.
