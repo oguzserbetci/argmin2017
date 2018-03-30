@@ -59,14 +59,15 @@ state-of-the-art results. The authors use a Pointer Network~\cite{pn} which is a
 
 In~\cite{potash2017here}, the pointer network architecture is extended in two ways.
 First, to account for the large and sparse AC representations, fully-connected layers are added before the encoder and decoder LSTM inputs.
-Second, to improve performance an auxiliary task is added. The task is to predict whether an AC is the claim or a premise.
-Multi-task learning in deep neural networks has been shown to perform better in comparison to single task~\cite{multi}, which the results of this work further demonstrates.
+Second, an auxiliary task is added to improve performance. The task is to predict whether an AC is the claim or a premise.
+Note that this task is redundant because the head of the tree, which can be inferred from the tree structure, is always the claim.
+However, multi-task learning in deep neural networks has been shown to perform better in comparison to single task~\cite{multi}, which the results of this work further demonstrates.
 
 \subsection{Architecture}
 The architecture is a seq2seq model as depicted in~\autoref{fig:seq2seq}.
 For brevity let us leave out the fully connected layers before the inputs of the encoder and the decoder.
-At each time step, an AC is input into the encoder which results in hidden state $e_i$.
-Each $e_i$ is used to predict the probability distribution over types of the $\text{AC}_i$.
+At each time step, an $\text{AC}_i$ is input into the encoder and results in hidden state $e_i$,
+which is then used to predict the probability distribution over whether the $\text{AC}_i$ is the claim or premise.
 
 \begin{align*}
     z_i = W_{\text{cls}} e_i + b_{\text{cls}}\\
@@ -140,14 +141,6 @@ We had to account for the different indexing scheme between the newly annotated 
 
 \section{Results}
 To compare our results we did a single 10-fold cross validation. Our results and the results from~\cite{potash2017here} can be seen in~\autoref{tab:results}.
-Only additional configuration we present is to apply class weights into the loss calculation and using the new extended corpus.
-We were motivated to use class weights because of the highly skewed link and type distribution across the corpus as seen in~\autoref{fig:skew}.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.4\linewidth]{fig/dist.png}
-    \caption{Distribution of links.}\label{fig:skew}
-\end{figure}
 
 \begin{table}[h]
     \centering
@@ -171,26 +164,37 @@ Our results presented in \autoref{tab:res} shows similar scores as reported in~\
 One interesting observation is that our single task model had better performance on link prediction in contrast to results reported in \cite{potash2017here} for the Persuasive Essay corpus
 (\cite{potash2017here} does not include the single task performance on the microtext corpus.)
 
-One additional test we did was to weight the loss during training according to class weights of links and types.
+We also present results from the new extended corpus.
+TODO
+
+Another additional configuration we present is to apply class weights as a weight to loss calculation.
+We were motivated to use class weights because of the highly skewed link and type distribution across the corpus as seen in~\autoref{fig:skew}.
 As seen in \autoref{tab:res} this worsens the performance.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\linewidth]{fig/dist.png}
+    \caption{Distribution of links.}\label{fig:skew}
+\end{figure}
 
 \section{Conclusion}
 We have learned a lot through this project.
 The implementation was not as straight forward as we have thought it would be.
-There are many possible future extensions we would have like to do.
-First, as the authors have suggested in \cite{potash2017here}, using a seq2seq model to represent ACs might improve the performance greatly.
+There are many possible future extensions we would have liked to do.
+First, as the authors have suggested in~\cite{potash2017here}, using a seq2seq model to embed ACs might improve the performance greatly.
 It would also eliminate the need for the fully connected layers that add a lot of unnecessary model complexity.
 However, a seq2seq representation of ACs would require much larger data.
-We suggest using a large unannotated corpus with sent2vec or \cite{sent} could prove successful.
+We suggest using a large unannotated corpus with sent2vec or transfer learning as described in~\cite{sent}.
 
 Another extension is to build an end-to-end architecture which can identify ACs in a text.
 We think that these two extensions are intertwined and should be explored together.
+Because solving this task would require large amounts of data and transfer learning.
 
 An easier extension would be to add even more tasks to see if it helps with performance.
 The microtext corpus already has additional informations that can be used: the role of the AC, and the function of the AC.
 
 Another note for future work would be to use a deep learning framework with dynamic graphs like pytorch.
-We found it to be a much better fit for a seq2seq model.
+We have tried it shortly and found it to be a much better fit for a seq2seq model.
 
 \nocite{*}
 \bibliographystyle{plain}
