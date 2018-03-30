@@ -57,14 +57,16 @@ Having found the paper ``Here's My Point: Joint Pointer Architecture for Argumen
 would be good to try and reproduce the architecture and the results from this paper, especially because the authors claimed they achieved
 state-of-the-art results. The authors use a Pointer Network~\cite{pn} which is a modification of seq2seq (sequence-to-sequence) architecture~\cite{seq2seq} with attention~\cite{attention}.
 
-In~\cite{potash2017here}, the pointer network architecture is extended in two ways.
+In~\cite{potash2017here}, authors limit the problem of argument mining to following scenario:
+Given a set of ACs, predict the argument structure by predicting the links between ACs.
+To this end, the pointer network architecture is extended in two ways.
 First, to account for the large and sparse AC representations, fully-connected layers are added before the encoder and decoder LSTM inputs.
 Second, an auxiliary task is added to improve performance. The task is to predict whether an AC is the claim or a premise.
-Note that this task is redundant because the head of the tree, which can be inferred from the tree structure, is always the claim.
+Note that this task is redundant because the root of the tree, which can be inferred from the argument structure, is always the claim.
 However, multi-task learning in deep neural networks has been shown to perform better in comparison to single task~\cite{multi}, which the results of this work further demonstrates.
 
 \subsection{Architecture}
-The architecture is a seq2seq model as depicted in~\autoref{fig:seq2seq}.
+The architecture from \cite{potash2017here} is a seq2seq model as depicted in~\autoref{fig:seq2seq}.
 For brevity let us leave out the fully connected layers before the inputs of the encoder and the decoder.
 At each time step, an $\text{AC}_i$ is input into the encoder and results in hidden state $e_i$,
 which is then used to predict the probability distribution over whether the $\text{AC}_i$ is the claim or premise.
@@ -104,7 +106,10 @@ The model for the type and link predictions are depicted in~\autoref{fig:type} a
     \caption{Diagram of the model for predicting the outgoing link from $\text{AC}_1$. Thick edges represent a dot product with a parameter matrix.}\label{fig:link}
 \end{figure}
 
-\subsection{Organisation}
+\subsection{Implementation \& Organisation}
+For embedding the ACs we have used spacy w2v models and the sklearn's bag of words featurizer.
+The seq2seq model was implemented with Keras functional API
+
 We have organized the project into 3 milestones and enforced deadlines.
 In milestone 1, we have implemented the data preprocessing and created simple bag-of-words vector representations of argument components.
 After that we implemented a pointer network with one-directional encoder for the single task (determining the links between ACs) without the fully connected layer at inputs.
@@ -119,16 +124,16 @@ of word vectors\footnote{We have used \href{https://github.com/explosion/spacy-m
 In milestone 3, we have implemented the joint model architecture with the auxiliary task of classifying the type of AC (claim or premise).
 
 During development, we have used 5-fold cross-validation to evaluate different configurations and inspect our implementation.
-Some things we had to try out were: using weight regularization, where to apply dropout and the seq2seq architecture.
-The weight regularization did not improve performance when applied as an addition to dropout.
-Using only L2 regularization instead of dropout also performed worse compared to dropout.
+Some things we had to try out were: using weight decay (l2 regularization), where to apply dropout and the seq2seq architecture.
+Weight decay did not improve performance when applied as an addition to dropout.
+Using only weight decay instead of dropout also performed worse compared to dropout.
 We found that dropout works best when applied to LSTM's cell state and input and nowhere else.
 
 \subsection{Challenges}
 While working on the project, we encountered some difficulties and made some errors that we then corrected. The first one
 was to think of the proper way to pad input sequences so that they have the same length.
 
-Our biggest mistake was to implement the seq2seq architecture wrong at first. We didn't have decoder inputs and the encoder and decoder were stacked on top of each other. Surprisingly this did not effect the performance much.
+Our biggest mistake was to implement the seq2seq architecture without the decoder inputs and to stack the encoder and the decoder on top of each other. Surprisingly this did not effect the performance much.
 
 Another mistake we did was to calculate the evaluation metrics wrong.
 We have calculated the f1 score not as a binary classification of absence and presence of links, but as a categorical one instead.
@@ -137,10 +142,10 @@ This has resulted in significantly worse results which led us to tinker with our
 This mistake and its correction has been a great learning for us, however, we note that the binary measure makes the results look much better than they are,
 since by definition in the worst case for $n$ ACs the network gets $n-2$ absence of links correct. Therefore, taking the macro average of the binary f1 score is misleading. We think the result that most telling is the f1 score for the prediction of the presence of links.
 
-We had to account for the different indexing scheme between the newly annotated corpus.
+Finally, when we parsed the new corpus, we had to account for the inconsistent indexing scheme.
 
 \section{Results}
-To compare our results we did a single 10-fold cross validation. Our results and the results from~\cite{potash2017here} can be seen in~\autoref{tab:results}.
+To compare our results we did a 10-fold cross validation. Our results and the results from~\cite{potash2017here} can be seen in~\autoref{tab:res}.
 
 \begin{table}[h]
     \centering
@@ -153,19 +158,18 @@ To compare our results we did a single 10-fold cross validation. Our results and
         Their Joint Model                 & 0.813 & 0.692 & 0.934 & 0.749 & 0.577 & 0.903 \\
         Our Joint Model                   & 0.824 & 0.714 & 0.934 & 0.737 & 0.526 & 0.947 \\
         Our Single Task Model             &   –   &   –   &   –   & 0.755 & 0.559 & 0.951 \\
-        Our Joint Model with loss weights & 0.806 & 0.699 & 0.913 & 0.725 & 0.505 & 0.945 \\
         Our Joint Model with new data     & 0.809 & 0.695 & 0.922 & 0.716 & 0.516 & 0.943 \\
+        Our Joint Model with loss weights & 0.806 & 0.699 & 0.913 & 0.725 & 0.505 & 0.945 \\
         \hline
     \end{tabular}
     \caption{The results of 10-fold cross-validation of different configuration of our model.}\label{tab:res}
 \end{table}
 
-Our results presented in \autoref{tab:res} shows similar scores as reported in~\cite{potash2017here}, which we include in the table for convenience.
-One interesting observation is that our single task model had better performance on link prediction in contrast to results reported in \cite{potash2017here} for the Persuasive Essay corpus
+Our results presented in \autoref{tab:res} are similar to ones reported in~\cite{potash2017here}, which we include in the table for convenience.
+One interesting observation is that our single task model had better performance on link prediction in contrast to results reported for the Persuasive Essay corpus in \cite{potash2017here}
 (\cite{potash2017here} does not include the single task performance on the microtext corpus.)
 
 We also present results from the new extended corpus.
-TODO
 
 Another additional configuration we present is to apply class weights as a weight to loss calculation.
 We were motivated to use class weights because of the highly skewed link and type distribution across the corpus as seen in~\autoref{fig:skew}.
@@ -173,7 +177,7 @@ As seen in \autoref{tab:res} this worsens the performance.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.4\linewidth]{fig/dist.png}
+    \includegraphics[width=0.6\linewidth]{fig/dist.png}
     \caption{Distribution of links.}\label{fig:skew}
 \end{figure}
 
@@ -191,9 +195,9 @@ We think that these two extensions are intertwined and should be explored togeth
 Because solving this task would require large amounts of data and transfer learning.
 
 An easier extension would be to add even more tasks to see if it helps with performance.
-The microtext corpus already has additional informations that can be used: the role of the AC, and the function of the AC.
+The microtext corpus already has additional information that can be used such as the role of the AC, and the function of the AC.
 
-Another note for future work would be to use a deep learning framework with dynamic graphs like pytorch.
+Another note for future work would be to use a deep learning framework with dynamic graphs like pytorch or dynet.
 We have tried it shortly and found it to be a much better fit for a seq2seq model.
 
 \nocite{*}
