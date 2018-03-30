@@ -18,7 +18,7 @@
 \title{\spacecaps{Project module report: Argumentation Mining }\\
        \normalsize\spacesc{University of Potsdam, Winter semester 2017/18}}
 
-\author{Oğuz Şerbetci, Maria Stazherova}
+\author{O\u{g}uz \c{S}erbetci, Maria Stazherova}
 \date{\today}
 
 \begin{document}
@@ -104,23 +104,23 @@ The model for the type and link predictions are depicted in~\autoref{fig:type} a
 \end{figure}
 
 \subsection{Organisation}
-We have organized the project into 3 milestones and enforces deadlines.
+We have organized the project into 3 milestones and enforced deadlines.
 In milestone 1, we have implemented the data preprocessing and created simple bag-of-words vector representations of argument components.
 After that we implemented a pointer network with one-directional encoder for the single task (determining the links between ACs) without the fully connected layer at inputs.
 We sticked to using $0.9$ dropout, as it was specified in~\cite{potash2017here}.
 However, because the paper didn't specify where the dropout should be used, we had to do a hyper-parameter search.
 
 In milestone 2, we extended the architecture with the fully-connected inputs and the bidirectional LSTM for the encoder.
-Moreover, we have added all applicable features to AC representation from the paper: The structural feature
-(binary, is the AC the first one in text or not), the bag-of-words representation and the embedding representations (average, min and max pooling
+Moreover, we have added all applicable features to AC representation from the paper: the structural feature
+(binary, if the AC is the first one in text or not), the bag-of-words representation and the embedding representations (average, min and max pooling
 of word vectors\footnote{We have used \href{https://github.com/explosion/spacy-models/releases/tag/en_vectors_web_lg-2.0.0}{spacy} word vectors.} of tokens).
 
 In milestone 3, we have implemented the joint model architecture with the auxiliary task of classifying the type of AC (claim or premise).
 
 During development, we have used 5-fold cross-validation to evaluate different configurations and inspect our implementation.
-Some things we had to try out was using regularization, where to apply dropout and the seq2seq architecture.
-The regularization did not improve performance when applied as an addition to dropout.
-Only using l2 regularization instead of dropout also performed worse compared to dropout.
+Some things we had to try out were: using weight regularization, where to apply dropout and the seq2seq architecture.
+The weight regularization did not improve performance when applied as an addition to dropout.
+Using only L2 regularization instead of dropout also performed worse compared to dropout.
 We found that dropout works best when applied to LSTM's cell state and input and nowhere else.
 
 \subsection{Challenges}
@@ -130,7 +130,7 @@ was to think of the proper way to pad input sequences so that they have the same
 Our biggest mistake was to implement the seq2seq architecture wrong at first. We didn't have decoder inputs and the encoder and decoder were stacked on top of each other. Surprisingly this did not effect the performance much.
 
 Another mistake we did was to calculate the evaluation metrics wrong.
-We have calculated the f1 score not as a binary classification of absence and presence of links, instead as a categorical one.
+We have calculated the f1 score not as a binary classification of absence and presence of links, but as a categorical one instead.
 This has resulted in significantly worse results which led us to tinker with our architecture and identify the wrong seq2seq architecture. We have even implemented the architecture in pytorch from scratch.
 
 This mistake and its correction has been a great learning for us, however, we note that the binary measure makes the results look much better than they are,
