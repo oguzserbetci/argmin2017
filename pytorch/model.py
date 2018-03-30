@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+import numpy as np
+
 
 class Encoder(nn.Module):
     def __init__(self, embedding_size, hidden_size, dropout=0.9):
@@ -114,6 +116,7 @@ class PointerNetwork(nn.Module):
         self.decoder = Decoder(embedding_size, hidden_size, dropout)
         self.attention = Attention(hidden_size, hidden_size, dropout)
         self.training = True
+        self.teacher_forcing = 0.5
 
     def set_training(self, training):
         self.training = training
@@ -148,8 +151,9 @@ class PointerNetwork(nn.Module):
 
         decoder_outputs = Variable(torch.zeros(1, seq_length, self.hidden_size))
 
-        use_teacher_forcing = self.training
         outputs = []
+
+        use_teacher_forcing = np.random.rand() < self.teacher_forcing if self.training else False
         if use_teacher_forcing:
             for di in range(seq_length):
                 decoder_input = decoder_inputs[:, [di]]
@@ -159,6 +163,18 @@ class PointerNetwork(nn.Module):
                 decoder_outputs[:, ei] = decoder_output[:, 0]
                 # print('do', decoder_output.size())
                 link = self.attention(decoder_output, encoder_outputs)
+                # print('link', link.shape)
+                outputs.append(link)
+        else:
+            decoder_input = decoder_inputs[:, [0]]
+            for di in range(seq_length):
+                # print('di', decoder_input.size())
+                decoder_output, decoder_states = self.decoder(decoder_input,
+                                                              decoder_states)
+                decoder_outputs[:, ei] = decoder_output[:, 0]
+                # print('do', decoder_output.size())
+                link = self.attention(decoder_output, encoder_outputs)
+                decoder_input = encoder_inputs[:, torch.max(link, -1)[1]]
                 # print('link', link.shape)
                 outputs.append(link)
 

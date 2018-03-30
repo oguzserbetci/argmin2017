@@ -59,7 +59,6 @@ def train(dataloader, n_epochs, print_every=1000, plot_every=100, **params):
             batchloss.append(loss.data[0])
 
             iterator.set_postfix(loss=str(loss.data[0]))
-            break
         iterator.set_postfix(loss=np.mean(batchloss))
 
 
