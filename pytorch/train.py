@@ -39,9 +39,6 @@ def train(dataloader, n_epochs, print_every=1000, plot_every=100, **params):
             encoder_batch = Variable(sample_batched['Encoder'])
             decoder_batch = Variable(sample_batched['Decoder'])
             links_batch = Variable(sample_batched['Links']).squeeze()
-            print('encoder inputs:', encoder_batch.shape)
-            print('decoder inputs:', decoder_batch.shape)
-            print('links:', links_batch.shape)
 
             outputs = model(encoder_batch, decoder_batch)[:len(links_batch)]
             output_batch = torch.max(torch.cat(outputs, 0), -1)[1]
@@ -70,4 +67,4 @@ if __name__ == "__main__":
                             batch_size=BATCH_SIZE,
                             num_workers=4)
 
-    train(dataloader, n_epochs=4000, embedding_size=2927, hidden_size=56, max_length=7, dropout=0)
+    train(dataloader, n_epochs=4000, embedding_size=2927, hidden_size=256, max_length=7, dropout=0)

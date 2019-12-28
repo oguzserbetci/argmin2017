@@ -128,7 +128,7 @@ class PointerNetwork(nn.Module):
         '''
         # (batch, 1, hidden)
         encoder_states = self.encoder.init_states()
-        print('es', encoder_states[0].size())
+        # print('es', encoder_states[0].size())
 
         seq_length = encoder_inputs.size()[1]
         # # # print('e', encoder_inputs.size())
@@ -137,17 +137,17 @@ class PointerNetwork(nn.Module):
         for ei in range(seq_length):
             # (batch, seq_len, hidden)
             encoder_input = encoder_inputs[:,[ei]]
-            print('ei', encoder_input.size())
+            # print('ei', encoder_input.size())
             encoder_output, encoder_states = self.encoder(encoder_input, encoder_states)
             # print('eo', encoder_output.size())
             encoder_outputs[:, ei] = encoder_output[:, 0]
 
         # (batch, seq_len, hidden)
         # encoder_outputs = torch.cat(encoder_outputs, 1)
-        print('eos', encoder_outputs.size())
+        # print('eos', encoder_outputs.size())
         # (batch, 1, hidden)
         decoder_states = encoder_states
-        print('ds', decoder_states[0].size())
+        # print('ds', decoder_states[0].size())
 
         decoder_outputs = Variable(torch.zeros(1, seq_length, self.hidden_size))
 
